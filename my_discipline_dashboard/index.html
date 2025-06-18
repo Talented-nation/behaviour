@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انضباطي - لوحة مؤشرات المدرسة</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Basic CSS Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #eef1f6;
+            color: #333;
+            direction: rtl; /* Right-to-left for Arabic */
+        }
+        .header {
+            background-color: #2c3e50; /* Dark blue/grey */
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .main-nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+        .main-nav-button {
+            background-color: #007bff; /* Blue */
+            color: white;
+            padding: 15px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-nav-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .main-nav-button.active {
+            background-color: #28a745; /* Green for active */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        .sub-nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding-top: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .sub-nav-button {
+            background-color: #6c757d; /* Grey */
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .sub-nav-button:hover {
+            background-color: #5a6268;
+        }
+        .sub-nav-button.active {
+            background-color: #17a2b8; /* Teal for active sub-button */
+        }
+        .content-section {
+            padding: 20px 0;
+            min-height: 400px; /* Ensure space for chart */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .indicator-heading {
+            font-size: 1.8em;
+            color: #34495e;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        .current-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 10px 20px;
+            background-color: #e9f7ef;
+            border-radius: 10px;
+            border: 1px solid #d4edda;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px; /* Fixed height for the chart */
+            width: 80%; /* Width relative to container */
+            max-width: 600px; /* Max width for consistency */
+            margin: 0 auto; /* Center the chart */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-nav-buttons, .sub-nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .main-nav-button, .sub-nav-button {
+                width: 90%;
+                max-width: 300px;
+            }
+            .container {
+                margin: 20px 10px;
+                padding: 20px;
+            }
+            .chart-container {
+                height: 300px;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>لوحة انضباطي</h1>
+    </div>
+
+    <div class="container">
+        <div class="main-nav-buttons">
+            <button class="main-nav-button active" data-indicator-type="attendance">نسب حضور الطالبات</button>
+            <button class="main-nav-button" data-indicator-type="absenteeism">نسب غياب الطالبات</button>
+            <button class="main-nav-button" data-indicator-type="behavior">الحوادث السلوكية</button>
+        </div>
+
+        <div class="sub-nav-buttons">
+            <button class="sub-nav-button active" data-grade="overall">إجمالي (جميع الصفوف)</button>
+            <button class="sub-nav-button" data-grade="grade1">الصف الأول</button>
+            <button class="sub-nav-button" data-grade="grade2">الصف الثاني</button>
+            <button class="sub-nav-button" data-grade="grade3">الصف الثالث</button>
+        </div>
+
+        <div id="dashboard-content" class="content-section">
+            <h2 class="indicator-heading" id="current-indicator-title"></h2>
+            <div class="current-value" id="current-indicator-value"></div>
+            <div class="chart-container">
+                <canvas id="disciplineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript for Interactivity, Data, and Charting ---
+
+        // Simulated Dummy Data
+        const dashboardData = {
+            attendance: {
+                overall: {
+                    value: '94.5%',
+                    chartType: 'doughnut',
+                    labels: ['غياب', 'حضور'],
+                    values: [5.5, 94.5],
+                    colors: ['#dc3545', '#28a745'] // Red for absent, Green for present
+                },
+                grade1: {
+                    value: '96%',
+                    chartType: 'doughnut',
+                    labels: ['غياب', 'حضور'],
+                    values: [4, 96],
+                    colors: ['#dc3545', '#28a745']
+                },
+                grade2: {
+                    value: '93%',
+                    chartType: 'doughnut',
+                    labels: ['غياب', 'حضور'],
+                    values: [7, 93],
+                    colors: ['#dc3545', '#28a745']
+                },
+                grade3: {
+                    value: '94%',
+                    chartType: 'doughnut',
+                    labels: ['غياب', 'حضور'],
+                    values: [6, 94],
+                    colors: ['#dc3545', '#28a745']
+                }
+            },
+            absenteeism: {
+                overall: {
+                    value: '5.5%', // Overall Absenteeism Rate
+                    chartType: 'bar',
+                    labels: ['الصف الأول', 'الصف الثاني', 'الصف الثالث'],
+                    values: [4, 7, 6], // Absenteeism rates by grade
+                    colors: ['#ffc107', '#ffc107', '#ffc107'] // Yellow for absenteeism
+                },
+                grade1: {
+                    value: '4%',
+                    chartType: 'bar',
+                    labels: ['غياب (مسموح به)', 'غياب (غير مسموح به)'],
+                    values: [2, 2],
+                    colors: ['#ffc107', '#fd7e14'] // Orange for unexcused
+                },
+                grade2: {
+                    value: '7%',
+                    chartType: 'bar',
+                    labels: ['غياب (مسموح به)', 'غياب (غير مسموح به)'],
+                    values: [3, 4],
+                    colors: ['#ffc107', '#fd7e14']
+                },
+                grade3: {
+                    value: '6%',
+                    chartType: 'bar',
+                    labels: ['غياب (مسموح به)', 'غياب (غير مسموح به)'],
+                    values: [2.5, 3.5],
+                    colors: ['#ffc107', '#fd7e14']
+                }
+            },
+            behavior: {
+                overall: {
+                    value: '8 حوادث/شهر', // Overall average incidents per month
+                    chartType: 'bar',
+                    labels: ['الصف الأول', 'الصف الثاني', 'الصف الثالث'],
+                    values: [3, 2, 3], // Incidents count by grade
+                    colors: ['#dc3545', '#dc3545', '#dc3545'] // Red for behavior
+                },
+                grade1: {
+                    value: '3 حوادث/شهر',
+                    chartType: 'doughnut',
+                    labels: ['مشاجرات', 'عدم احترام', 'تخريب'],
+                    values: [1, 1, 1],
+                    colors: ['#fd7e14', '#e83e8c', '#6f42c1'] // Different colors for incident types
+                },
+                grade2: {
+                    value: '2 حوادث/شهر',
+                    chartType: 'doughnut',
+                    labels: ['إزعاج', 'تأخر', 'خروج من الفصل'],
+                    values: [1, 0.5, 0.5],
+                    colors: ['#20c997', '#6610f2', '#e83e8c']
+                },
+                grade3: {
+                    value: '3 حوادث/شهر',
+                    chartType: 'doughnut',
+                    labels: ['تنمّر', 'رفض أوامر', 'تجاوزات لفظية'],
+                    values: [1, 1, 1],
+                    colors: ['#c1272d', '#007bff', '#ffc107']
+                }
+            }
+        };
+
+        let currentIndicatorType = 'attendance'; // Default active main indicator
+        let currentGrade = 'overall';            // Default active grade
+
+        const mainNavButtons = document.querySelectorAll('.main-nav-button');
+        const subNavButtons = document.querySelectorAll('.sub-nav-button');
+        const currentIndicatorTitle = document.getElementById('current-indicator-title');
+        const currentIndicatorValue = document.getElementById('current-indicator-value');
+        const ctx = document.getElementById('disciplineChart').getContext('2d');
+        let disciplineChart = null; // To hold our Chart.js instance
+
+        // Function to update the dashboard content and chart
+        function updateDashboard() {
+            const data = dashboardData[currentIndicatorType][currentGrade];
+            if (!data) {
+                currentIndicatorTitle.textContent = 'لا توجد بيانات لهذا القسم.';
+                currentIndicatorValue.textContent = '';
+                if (disciplineChart) disciplineChart.destroy();
+                return;
+            }
+
+            // Update heading
+            let titleText = "";
+            if (currentIndicatorType === 'attendance') {
+                titleText = "نسب حضور الطالبات";
+            } else if (currentIndicatorType === 'absenteeism') {
+                titleText = "نسب غياب الطالبات";
+            } else if (currentIndicatorType === 'behavior') {
+                titleText = "الحوادث السلوكية";
+            }
+            if (currentGrade !== 'overall') {
+                titleText += ` - الصف ${currentGrade.replace('grade', '')}`;
+            } else {
+                 titleText += ` - إجمالي (جميع الصفوف)`;
+            }
+            currentIndicatorTitle.textContent = titleText;
+
+            // Update value display
+            currentIndicatorValue.textContent = data.value;
+
+            // Destroy existing chart before creating a new one
+            if (disciplineChart) {
+                disciplineChart.destroy();
+            }
+
+            // Chart Configuration
+            const chartConfig = {
+                type: data.chartType,
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: getChartLabel(currentIndicatorType, currentGrade),
+                        data: data.values,
+                        backgroundColor: data.colors,
+                        borderColor: data.colors.length === 1 ? data.colors[0] : [], // Only for single color bars
+                        borderWidth: 1,
+                        hoverOffset: data.chartType === 'doughnut' ? 4 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 14, family: 'Arial' }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: getChartTitle(currentIndicatorType, currentGrade),
+                            font: { size: 16, family: 'Arial', weight: 'bold' }
+                        }
+                    },
+                    scales: getChartScales(currentIndicatorType, data.chartType)
+                }
+            };
+            disciplineChart = new Chart(ctx, chartConfig);
+        }
+
+        // Helper function for chart labels
+        function getChartLabel(indicatorType, grade) {
+            if (indicatorType === 'attendance') return 'النسبة المئوية للحضور';
+            if (indicatorType === 'absenteeism') {
+                return grade === 'overall' ? 'نسبة الغياب (%)' : 'توزيع الغياب (%)';
+            }
+            if (indicatorType === 'behavior') {
+                return grade === 'overall' ? 'عدد الحوادث' : 'أنواع الحوادث';
+            }
+            return '';
+        }
+
+        // Helper function for chart titles
+        function getChartTitle(indicatorType, grade) {
+            if (indicatorType === 'attendance') return `توزيع الحضور ${grade === 'overall' ? '' : 'للصف ' + grade.replace('grade', '')}`;
+            if (indicatorType === 'absenteeism') return `معدلات الغياب ${grade === 'overall' ? 'حسب الصف' : 'للصف ' + grade.replace('grade', '')}`;
+            if (indicatorType === 'behavior') return `الحوادث السلوكية ${grade === 'overall' ? 'حسب الصف' : 'للصف ' + grade.replace('grade', '')}`;
+            return '';
+        }
+
+        // Helper function for chart scales (for bar charts)
+        function getChartScales(indicatorType, chartType) {
+            if (chartType === 'bar') {
+                return {
+                    y: {
+                        beginAtZero: true,
+                        max: indicatorType === 'absenteeism' ? 10 : (indicatorType === 'behavior' ? 5 : 100), // Max for Y-axis
+                        title: {
+                            display: true,
+                            text: indicatorType === 'absenteeism' ? 'النسبة المئوية (%)' : 'عدد الحوادث',
+                            font: { size: 14, family: 'Arial' }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'الفئة',
+                            font: { size: 14, family: 'Arial' }
+                        }
+                    }
+                };
+            }
+            return {}; // No specific scales for doughnut charts
+        }
+
+        // Add event listeners to main navigation buttons
+        mainNavButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                mainNavButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentIndicatorType = button.getAttribute('data-indicator-type');
+                // When changing main category, reset grade selection to 'overall'
+                subNavButtons.forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.sub-nav-button[data-grade="overall"]').classList.add('active');
+                currentGrade = 'overall';
+                updateDashboard();
+            });
+        });
+
+        // Add event listeners to sub-navigation (grade) buttons
+        subNavButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                subNavButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentGrade = button.getAttribute('data-grade');
+                updateDashboard();
+            });
+        });
+
+        // Initial load: display Attendance - Overall by default
+        updateDashboard();
+    </script>
+</body>
+</html>
