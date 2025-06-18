@@ -12,7 +12,7 @@ const dashboardData = {
             value: '96%',
             chartType: 'doughnut',
             labels: ['غياب', 'حضور'],
-            values: [4, 96],
+            values: [5, 95],
             colors: ['#dc3545', '#28a745']
         },
         grade2: {
