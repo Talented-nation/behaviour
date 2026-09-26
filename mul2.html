@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🚀 سفينة الضرب إلى القمر</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: #000;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+  }
+
+  .hud-item {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 6px 14px;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    font-weight: 700;
+    color: #fff;
+    pointer-events: auto;
+  }
+
+  .hud-item .val { color: #FFD700; margin: 0 3px; }
+  .hud-item.timer .val { color: #ff6b6b; }
+  .hud-item.timer.warning .val { color: #ff0000; animation: pulse 0.5s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .controls-area {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .d-pad {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    pointer-events: auto;
+  }
+
+  .d-btn {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.1s;
+  }
+
+  .d-btn:active, .d-btn.active {
+    background: rgba(255,215,0,0.4);
+    border-color: #FFD700;
+    transform: scale(0.92);
+  }
+
+  .d-btn.up { top: 0; left: 50%; transform: translateX(-50%); }
+  .d-btn.down { bottom: 0; left: 50%; transform: translateX(-50%); }
+  .d-btn.left { left: 0; top: 50%; transform: translateY(-50%); }
+  .d-btn.right { right: 0; top: 50%; transform: translateY(-50%); }
+
+  .action-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.2s;
+  }
+
+  .action-btn:active {
+    transform: scale(0.95);
+    background: rgba(255,215,0,0.3);
+  }
+
+  .action-btn.hint { border-color: #FFD700; color: #FFD700; }
+  .action-btn.hint:disabled { opacity: 0.4; }
+
+  .screen-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .screen-overlay.hidden { display: none; }
+
+  .screen-box {
+    background: linear-gradient(135deg, #1a1a4e, #2d1b69);
+    border: 3px solid #FFD700;
+    border-radius: 25px;
+    padding: 30px 25px;
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    animation: slideUp 0.5s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .screen-box h1 {
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    color: #FFD700;
+    margin-bottom: 10px;
+  }
+
+  .screen-box p {
+    color: #c8d6e5;
+    font-size: clamp(0.9rem, 2.8vw, 1.05rem);
+    line-height: 1.7;
+    margin-bottom: 15px;
+  }
+
+  .screen-box .emoji-big { font-size: 4rem; margin: 10px 0; }
+
+  .start-btn {
+    padding: 14px 40px;
+    font-size: 1.2rem;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 900;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1a1a4e;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,215,0,0.5);
+    transition: all 0.3s;
+    margin-top: 10px;
+  }
+
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255,215,0,0.7); }
+  .start-btn:active { transform: scale(0.95); }
+
+  .time-select {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 15px 0;
+    flex-wrap: wrap;
+  }
+
+  .time-btn {
+    padding: 8px 16px;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .time-btn.selected {
+    background: #FFD700;
+    color: #1a1a4e;
+    border-color: #FFD700;
+  }
+
+  .instructions {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 10px 0;
+    font-size: 0.85rem;
+    color: #a0c4ff;
+    line-height: 1.6;
+  }
+
+  .msg-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 30px;
+    border-radius: 20px;
+    font-size: 1.5rem;
+    font-weight: 900;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s;
+  }
+
+  .msg-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  .msg-popup.correct { background: rgba(67,233,123,0.9); color: #fff; }
+  .msg-popup.wrong { background: rgba(231,76,60,0.9); color: #fff; }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div class="hud">
+  <div class="hud-item">✅ <span class="val" id="hudCorrect">0</span>/<span class="val" id="hudTotal">0</span></div>
+  <div class="hud-item timer" id="hudTimer">⏱️ <span class="val" id="hudTime">60</span></div>
+  <div class="hud-item">❌ <span class="val" id="hudWrong">0</span></div>
+</div>
+
+<div class="controls-area" id="controlsArea">
+  <div class="d-pad" id="dPad">
+    <div class="d-btn up" data-dir="up">▲</div>
+    <div class="d-btn down" data-dir="down">▼</div>
+    <div class="d-btn left" data-dir="left">◀</div>
+    <div class="d-btn right" data-dir="right">▶</div>
+  </div>
+  <div class="action-btns">
+    <button class="action-btn hint" id="hintBtn" onclick="useHint()">💡 تلميح (<span id="hintsCount">3</span>)</button>
+    <button class="action-btn" onclick="pauseGame()">⏸️ إيقاف</button>
+  </div>
+</div>
+
+<div class="screen-overlay" id="startScreen">
+  <div class="screen-box">
+    <div class="emoji-big">🌙</div>
+    <h1>سفينة الضرب إلى القمر</h1>
+    <p>قُد سفينتك نحو الغيمة التي تحتوي على <strong style="color:#FFD700">جملة الضرب الصحيحة</strong> فقط!</p>
+    <div class="instructions">
+      🎮 استخدم أزرار الأسهم أو لوحة المفاتيح للتحرك<br>
+      ⏱️ أكمل المهمة قبل انتهاء الوقت<br>
+      💡 لديك 3 تلميحات لمساعدتك
+    </div>
+    <p style="font-size:0.9rem; margin-bottom:5px;">اختر الوقت:</p>
+    <div class="time-select">
+      <button class="time-btn" data-time="30">30 ثانية</button>
+      <button class="time-btn selected" data-time="60">60 ثانية</button>
+      <button class="time-btn" data-time="90">90 ثانية</button>
+      <button class="time-btn" data-time="0">بدون وقت</button>
+    </div>
+    <button class="start-btn" onclick="startGame()">🚀 انطلق!</button>
+  </div>
+</div>
+
+<div class="screen-overlay hidden" id="endScreen">
+  <div class="screen-box">
+    <div class="emoji-big" id="endEmoji">🎉</div>
+    <h1 id="endTitle">انتهت اللعبة!</h1>
+    <p id="endMessage"></p>
+    <button class="start-btn" onclick="resetGame()">🔄 العب مرة أخرى</button>
+  </div>
+</div>
+
+<div class="screen-overlay hidden" id="pauseScreen">
+  <div class="screen-box">
+    <div class="emoji-big">⏸️</div>
+    <h1>إيقاف مؤقت</h1>
+    <button class="start-btn" onclick="resumeGame()">▶️ متابعة</button>
+    <br>
+    <button class="start-btn" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;margin-top:10px;" onclick="resetGame()">🔄 إعادة من البداية</button>
+  </div>
+</div>
+
+<div class="msg-popup" id="msgPopup"></div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth * devicePixelRatio;
+  H = canvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+const cloudsData = [
+  { a: 2, b: 3, result: 6, correct: true },
+  { a: 12, b: 2, result: 24, correct: true },
+  { a: 1, b: 2, result: 1, correct: false },
+  { a: 6, b: 2, result: 8, correct: false },
+  { a: 2, b: 9, result: 11, correct: false },
+  { a: 8, b: 2, result: 16, correct: true },
+  { a: 4, b: 2, result: 8, correct: true },
+  { a: 2, b: 7, result: 14, correct: true },
+  { a: 11, b: 2, result: 22, correct: true },
+  { a: 2, b: 5, result: 10, correct: true },
+  { a: 2, b: 6, result: 12, correct: true },
+  { a: 3, b: 2, result: 5, correct: false },
+  { a: 2, b: 8, result: 14, correct: false },
+  { a: 7, b: 3, result: 12, correct: false },
+  { a: 2, b: 10, result: 20, correct: true },
+  { a: 2, b: 2, result: 4, correct: true },
+  { a: 2, b: 12, result: 26, correct: false },
+  { a: 9, b: 2, result: 18, correct: true },
+  { a: 2, b: 1, result: 2, correct: true },
+];
+
+// ✅ تم تصحيح مصفوفة الأرقام العربية هنا (إضافة الرقم ٢)
+function toArabicNum(num) {
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return num.toString().split('').map(d => arabicDigits[parseInt(d)]).join('');
+}
+
+let gameState = 'start';
+let timeLimit = 60;
+let timeLeft = 60;
+let timerInterval = null;
+let correctFound = 0;
+let wrongFound = 0;
+let hintsRemaining = 3;
+let totalCorrect = cloudsData.filter(c => c.correct).length;
+
+const rocket = {
+  x: 0, y: 0, w: 50, h: 70,
+  vx: 0, vy: 0,
+  speed: 4,
+  angle: 0,
+  flamePhase: 0
+};
+
+let clouds = [];
+let stars = [];
+let moon = { x: 0, y: 0, r: 50 };
+let particles = [];
+let trail = [];
+
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: Math.random() * 2.5 + 0.5,
+      twinkle: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.02 + 0.01
+    });
+  }
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function placeClouds() {
+  clouds = [];
+  const shuffled = shuffle(cloudsData);
+  const padding = 80;
+  const availW = window.innerWidth - padding * 2;
+  const availH = window.innerHeight - padding * 2 - 100;
+
+  shuffled.forEach((data) => {
+    let x, y, overlap;
+    let attempts = 0;
+    do {
+      overlap = false;
+      x = padding + Math.random() * availW;
+      y = padding + 60 + Math.random() * availH;
+      for (const c of clouds) {
+        const dx = c.x - x, dy = c.y - y;
+        if (Math.sqrt(dx*dx + dy*dy) < 110) { overlap = true; break; }
+      }
+      attempts++;
+    } while (overlap && attempts < 50);
+
+    clouds.push({
+      x, y,
+      w: 110, h: 65,
+      data,
+      found: false,
+      revealed: false,
+      shake: 0,
+      glow: 0,
+      hintGlow: 0,
+      bobPhase: Math.random() * Math.PI * 2
+    });
+  });
+}
+
+function initPositions() {
+  rocket.x = window.innerWidth / 2;
+  rocket.y = window.innerHeight - 120;
+  rocket.vx = 0; rocket.vy = 0;
+
+  moon.x = window.innerWidth / 2;
+  moon.y = 80;
+  moon.r = Math.min(55, window.innerWidth * 0.12);
+
+  placeClouds();
+}
+
+const keys = {};
+const touchDirs = { up: false, down: false, left: false, right: false };
+
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+document.querySelectorAll('.d-btn').forEach(btn => {
+  const dir = btn.dataset.dir;
+  const start = () => { touchDirs[dir] = true; btn.classList.add('active'); };
+  const end = () => { touchDirs[dir] = false; btn.classList.remove('active'); };
+  btn.addEventListener('touchstart', e => { e.preventDefault(); start(); });
+  btn.addEventListener('touchend', e => { e.preventDefault(); end(); });
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
+});
+
+document.querySelectorAll('.time-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    timeLimit = parseInt(btn.dataset.time);
+  });
+});
+
+function startGame() {
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+  gameState = 'playing';
+  correctFound = 0;
+  wrongFound = 0;
+  hintsRemaining = 3;
+  timeLeft = timeLimit;
+  particles = [];
+  trail = [];
+
+  updateHUD();
+  initPositions();
+
+  if (timeLimit > 0) {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (gameState === 'playing') {
+        timeLeft--;
+        document.getElementById('hudTime').textContent = timeLeft;
+        if (timeLeft <= 10) document.getElementById('hudTimer').classList.add('warning');
+        else document.getElementById('hudTimer').classList.remove('warning');
+        if (timeLeft <= 0) endGame(false);
+      }
+    }, 1000);
+  } else {
+    document.getElementById('hudTime').textContent = '∞';
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+function resetGame() {
+  clearInterval(timerInterval);
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('pauseScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+  gameState = 'start';
+}
+
+function pauseGame() {
+  if (gameState === 'playing') {
+    gameState = 'paused';
+    document.getElementById('pauseScreen').classList.remove('hidden');
+  }
+}
+
+function resumeGame() {
+  gameState = 'playing';
+  document.getElementById('pauseScreen').classList.add('hidden');
+}
+
+function endGame(won) {
+  gameState = 'ended';
+  clearInterval(timerInterval);
+  const endScreen = document.getElementById('endScreen');
+  const endEmoji = document.getElementById('endEmoji');
+  const endTitle = document.getElementById('endTitle');
+  const endMessage = document.getElementById('endMessage');
+
+  if (won) {
+    endEmoji.textContent = '🎉🚀';
+    endTitle.textContent = 'أحسنت! وصلت إلى القمر!';
+    const mistakes = wrongFound === 0 ? 'بدون أي خطأ!' : `بـ ${wrongFound} أخطاء فقط`;
+    endMessage.textContent = `أكملت ${totalCorrect} جملة ضرب صحيحة ${mistakes} في ${timeLimit - timeLeft} ثانية!`;
+    launchConfetti();
+  } else {
+    endEmoji.textContent = '⏰';
+    endTitle.textContent = 'انتهى الوقت!';
+    endMessage.textContent = `أكملت ${correctFound} من ${totalCorrect} جملة صحيحة. حاول مرة أخرى!`;
+  }
+  endScreen.classList.remove('hidden');
+}
+
+function useHint() {
+  if (hintsRemaining <= 0 || gameState !== 'playing') return;
+  const available = clouds.filter(c => c.data.correct && !c.found && !c.revealed);
+  if (available.length === 0) return;
+  hintsRemaining--;
+  document.getElementById('hintsCount').textContent = hintsRemaining;
+  if (hintsRemaining <= 0) document.getElementById('hintBtn').disabled = true;
+  available[0].hintGlow = 1;
+}
+
+function showMsg(text, type) {
+  const popup = document.getElementById('msgPopup');
+  popup.textContent = text;
+  popup.className = 'msg-popup ' + type + ' show';
+  setTimeout(() => popup.classList.remove('show'), 1200);
+}
+
+function updateHUD() {
+  document.getElementById('hudCorrect').textContent = correctFound;
+  document.getElementById('hudTotal').textContent = totalCorrect;
+  document.getElementById('hudWrong').textContent = wrongFound;
+  document.getElementById('hintsCount').textContent = hintsRemaining;
+}
+
+function drawStars() {
+  stars.forEach(s => {
+    s.twinkle += s.speed;
+    const alpha = 0.4 + Math.sin(s.twinkle) * 0.4;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawMoon() {
+  const m = moon;
+  const grad = ctx.createRadialGradient(m.x, m.y, m.r * 0.5, m.x, m.y, m.r * 2);
+  grad.addColorStop(0, 'rgba(255,255,200,0.3)');
+  grad.addColorStop(1, 'rgba(255,255,200,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(m.x, m.y, m.r * 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  const moonGrad = ctx.createRadialGradient(m.x - m.r*0.3, m.y - m.r*0.3, 0, m.x, m.y, m.r);
+  moonGrad.addColorStop(0, '#f5f5e8');
+  moonGrad.addColorStop(0.7, '#d4d4c8');
+  moonGrad.addColorStop(1, '#a0a090');
+  ctx.fillStyle = moonGrad;
+  ctx.beginPath();
+  ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+  ctx.fill();
+
+  const craters = [
+    {x: -0.3, y: -0.2, r: 0.18}, {x: 0.25, y: -0.1, r: 0.22},
+    {x: -0.1, y: 0.25, r: 0.15}, {x: 0.3, y: 0.2, r: 0.12},
+    {x: -0.35, y: 0.05, r: 0.1}, {x: 0.05, y: -0.35, r: 0.09}
+  ];
+  craters.forEach(c => {
+    ctx.fillStyle = 'rgba(160,160,140,0.5)';
+    ctx.beginPath();
+    ctx.arc(m.x + m.x*c.x*0.5, m.y + m.y*c.y*0.3 + c.y*m.r, c.r*m.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(140,140,120,0.4)';
+    ctx.beginPath();
+    ctx.arc(m.x + m.x*c.x*0.5 - 2, m.y + m.y*c.y*0.3 + c.y*m.r - 2, c.r*m.r*0.6, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function drawCloud(cloud) {
+  if (cloud.found) return;
+
+  const bob = Math.sin(cloud.bobPhase) * 3;
+  const x = cloud.x + (cloud.shake > 0 ? (Math.random()-0.5)*cloud.shake : 0);
+  const y = cloud.y + bob;
+  const w = cloud.w, h = cloud.h;
+
+  cloud.bobPhase += 0.03;
+  if (cloud.shake > 0) cloud.shake *= 0.9;
+  if (cloud.hintGlow > 0) cloud.hintGlow -= 0.015;
+
+  if (cloud.hintGlow > 0) {
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 30 * cloud.hintGlow;
+  } else if (cloud.glow > 0) {
+    ctx.shadowColor = '#43e97b';
+    ctx.shadowBlur = 25 * cloud.glow;
+    cloud.glow -= 0.02;
+  }
+
+  ctx.fillStyle = cloud.revealed ? 'rgba(200,100,150,0.7)' : 'rgba(255,255,255,0.92)';
+  ctx.strokeStyle = cloud.revealed ? 'rgba(200,100,150,0.8)' : 'rgba(100,180,255,0.5)';
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.ellipse(x, y, w/2, h/2, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(x - w*0.25, y - h*0.3, w*0.3, h*0.35, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(x + w*0.2, y - h*0.25, w*0.25, h*0.3, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(x + w*0.15, y + h*0.2, w*0.2, h*0.25, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+
+  // ✅ الآن المسألة تُكتب من اليمين إلى اليسار بشكل صحيح مع الأرقام العربية المصححة
+  const data = cloud.data;
+  const text = `${toArabicNum(data.a)} × ${toArabicNum(data.b)} = ${toArabicNum(data.result)}`;
+  ctx.fillStyle = cloud.revealed ? 'rgba(255,255,255,0.6)' : '#2c3e50';
+  ctx.font = `bold ${Math.min(18, w*0.17)}px Tajawal`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+function drawRocket() {
+  const r = rocket;
+  r.flamePhase += 0.3;
+
+  ctx.save();
+  ctx.translate(r.x, r.y);
+
+  let angle = 0;
+  if (keys['ArrowLeft'] || touchDirs.left) angle = 0.15;
+  if (keys['ArrowRight'] || touchDirs.right) angle = -0.15;
+  r.angle += (angle - r.angle) * 0.1;
+  ctx.rotate(r.angle);
+
+  const w = r.w, h = r.h;
+
+  const flameH = 15 + Math.sin(r.flamePhase) * 5;
+  const flameGrad = ctx.createLinearGradient(0, h/2, 0, h/2 + flameH);
+  flameGrad.addColorStop(0, '#FFD700');
+  flameGrad.addColorStop(0.5, '#FF6B00');
+  flameGrad.addColorStop(1, 'rgba(255,100,0,0)');
+  ctx.fillStyle = flameGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w*0.25, h/2);
+  ctx.quadraticCurveTo(0, h/2 + flameH + 5, w*0.25, h/2);
+  ctx.fill();
+
+  const innerFlameH = flameH * 0.6;
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath();
+  ctx.moveTo(-w*0.12, h/2);
+  ctx.quadraticCurveTo(0, h/2 + innerFlameH, w*0.12, h/2);
+  ctx.fill();
+
+  const bodyGrad = ctx.createLinearGradient(-w/2, 0, w/2, 0);
+  bodyGrad.addColorStop(0, '#c0392b');
+  bodyGrad.addColorStop(0.5, '#e74c3c');
+  bodyGrad.addColorStop(1, '#c0392b');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -h/2);
+  ctx.quadraticCurveTo(w/2, -h/4, w/2, h/3);
+  ctx.lineTo(w/2, h/2);
+  ctx.lineTo(-w/2, h/2);
+  ctx.lineTo(-w/2, h/3);
+  ctx.quadraticCurveTo(-w/2, -h/4, 0, -h/2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-w/2, -h*0.05, w, h*0.12);
+  ctx.fillStyle = '#3498db';
+  ctx.fillRect(-w/2, h*0.15, w, h*0.12);
+
+  ctx.fillStyle = '#2c3e50';
+  ctx.beginPath();
+  ctx.arc(0, -h*0.15, w*0.22, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#87CEEB';
+  ctx.beginPath();
+  ctx.arc(0, -h*0.15, w*0.17, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.arc(-w*0.06, -h*0.2, w*0.06, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = '#3498db';
+  ctx.beginPath();
+  ctx.moveTo(-w/2, h*0.3);
+  ctx.lineTo(-w*0.7, h*0.55);
+  ctx.lineTo(-w/2, h*0.5);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w/2, h*0.3);
+  ctx.lineTo(w*0.7, h*0.55);
+  ctx.lineTo(w/2, h*0.5);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawTrail() {
+  trail.forEach((t, i) => {
+    t.life -= 0.02;
+    if (t.life <= 0) { trail.splice(i, 1); return; }
+    ctx.fillStyle = `rgba(255,200,100,${t.life * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.size * t.life, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function drawParticles() {
+  particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.1;
+    p.life -= 0.02;
+    if (p.life <= 0) { particles.splice(i, 1); return; }
+    ctx.fillStyle = p.color.replace('1)', p.life + ')');
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6 - 2,
+      size: Math.random() * 4 + 2,
+      life: 1,
+      color: color
+    });
+  }
+}
+
+function launchConfetti() {
+  const colors = ['rgba(255,215,0,1)', 'rgba(255,107,107,1)', 'rgba(67,233,123,1)', 'rgba(56,249,215,1)', 'rgba(243,104,224,1)'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: -20,
+        vx: (Math.random() - 0.5) * 4,
+        vy: Math.random() * 3 + 2,
+        size: Math.random() * 5 + 3,
+        life: 1,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }, i * 30);
+  }
+}
+
+function checkCloudCollision() {
+  for (const cloud of clouds) {
+    if (cloud.found || cloud.revealed) continue;
+    const dx = rocket.x - cloud.x;
+    const dy = rocket.y - cloud.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 60) {
+      if (cloud.data.correct) {
+        cloud.found = true;
+        cloud.glow = 1;
+        correctFound++;
+        spawnParticles(cloud.x, cloud.y, 'rgba(67,233,123,1)', 20);
+        showMsg('✅ صحيح!', 'correct');
+        updateHUD();
+
+        if (correctFound === totalCorrect) {
+          setTimeout(() => endGame(true), 800);
+        }
+      } else {
+        cloud.shake = 15;
+        cloud.revealed = true;
+        wrongFound++;
+        spawnParticles(cloud.x, cloud.y, 'rgba(231,76,60,1)', 15);
+        showMsg('❌ خاطئ!', 'wrong');
+        updateHUD();
+      }
+      break;
+    }
+  }
+}
+
+function update() {
+  if (gameState !== 'playing') return;
+
+  let dx = 0, dy = 0;
+  if (keys['ArrowUp'] || touchDirs.up) dy = -1;
+  if (keys['ArrowDown'] || touchDirs.down) dy = 1;
+  if (keys['ArrowLeft'] || touchDirs.left) dx = -1;
+  if (keys['ArrowRight'] || touchDirs.right) dx = 1;
+
+  if (dx !== 0 && dy !== 0) {
+    dx *= 0.707;
+    dy *= 0.707;
+  }
+
+  rocket.vx += dx * rocket.speed * 0.3;
+  rocket.vy += dy * rocket.speed * 0.3;
+  rocket.vx *= 0.85;
+  rocket.vy *= 0.85;
+
+  rocket.x += rocket.vx;
+  rocket.y += rocket.vy;
+
+  rocket.x = Math.max(30, Math.min(window.innerWidth - 30, rocket.x));
+  rocket.y = Math.max(80, Math.min(window.innerHeight - 80, rocket.y));
+
+  if (Math.abs(rocket.vx) > 0.5 || Math.abs(rocket.vy) > 0.5) {
+    trail.push({
+      x: rocket.x + (Math.random()-0.5)*10,
+      y: rocket.y + 30,
+      size: Math.random() * 4 + 2,
+      life: 1
+    });
+  }
+
+  checkCloudCollision();
+}
+
+function draw() {
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+  bgGrad.addColorStop(0, '#0a0e27');
+  bgGrad.addColorStop(0.5, '#1a1a4e');
+  bgGrad.addColorStop(1, '#2d1b69');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+  drawStars();
+  drawMoon();
+  drawTrail();
+
+  clouds.forEach(drawCloud);
+  drawParticles();
+  drawRocket();
+
+  if (correctFound === totalCorrect - 1) {
+    ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(rocket.x, rocket.y);
+    ctx.lineTo(moon.x, moon.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function gameLoop() {
+  update();
+  draw();
+  if (gameState === 'playing' || gameState === 'paused') {
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+initStars();
+initPositions();
+draw();
+
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+</script>
+</body>
+</html>
