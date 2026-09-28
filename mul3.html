@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>لعبة جدول الضرب - القارب الشراعي ✖️٣</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+        }
+
+        /* ===== Start Screen ===== */
+        #startScreen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, #ffffff, #f8fafc, #e0f2fe, #bae6fd);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #startScreen .clouds {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            overflow: hidden;
+        }
+
+        #startScreen .cloud {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.7;
+            animation: floatCloud 6s ease-in-out infinite;
+        }
+
+        #startScreen .cloud:nth-child(1) { top: 8%; left: 8%; animation-delay: 0s; }
+        #startScreen .cloud:nth-child(2) { top: 18%; right: 12%; animation-delay: 1s; font-size: 3.5rem; }
+        #startScreen .cloud:nth-child(3) { top: 3%; left: 45%; animation-delay: 2s; font-size: 4.5rem; }
+        #startScreen .cloud:nth-child(4) { top: 25%; left: 25%; animation-delay: 0.5s; font-size: 3rem; }
+
+        @keyframes floatCloud {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        #startScreen .water-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 35%;
+            background: linear-gradient(to bottom, rgba(186,230,253,0.5), rgba(125,211,252,0.7));
+            border-radius: 50% 50% 0 0 / 20px 20px 0 0;
+        }
+
+        #startScreen .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        #startScreen .ship-icon {
+            font-size: 6rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        #startScreen h1 {
+            font-size: 2.8rem;
+            color: #1e40af;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+            margin: 0.5rem 0;
+        }
+
+        #startScreen .subtitle {
+            background: linear-gradient(to right, #fbbf24, #f59e0b);
+            display: inline-block;
+            padding: 0.6rem 2rem;
+            border-radius: 2rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        }
+
+        #startScreen .desc {
+            color: #1e3a8a;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 500;
+        }
+
+        #startScreen .start-btn {
+            background: linear-gradient(to right, #34d399, #10b981);
+            color: white;
+            font-size: 1.6rem;
+            font-weight: bold;
+            padding: 1rem 2.5rem;
+            border: 4px solid #a7f3d0;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+        }
+
+        #startScreen .start-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #startScreen .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        #highScoreDisplay {
+            color: #92400e;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: rgba(255,255,255,0.5);
+            padding: 0.4rem 1rem;
+            border-radius: 1rem;
+        }
+
+        #startScreen .instructions {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.9);
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.5rem;
+            margin-top: 1.5rem;
+            max-width: 380px;
+            text-align: right;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        #startScreen .instructions h3 {
+            color: #1e40af;
+            font-size: 1.2rem;
+            margin-bottom: 0.6rem;
+            text-align: center;
+        }
+
+        #startScreen .instructions ul {
+            list-style: none;
+            color: #1e3a8a;
+            font-size: 1rem;
+        }
+
+        #startScreen .instructions li {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 500;
+        }
+
+        /* ===== Game Screen ===== */
+        #gameScreen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, #ffffff, #f8fafc, #e0f2fe, #bae6fd);
+            display: none;
+            overflow: hidden;
+        }
+
+        /* Sky */
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 35%;
+            pointer-events: none;
+        }
+
+        .sky .cloud {
+            position: absolute;
+            opacity: 0.7;
+            animation: floatCloud 5s ease-in-out infinite;
+        }
+
+        .sky .sun {
+            position: absolute;
+            top: 5%;
+            right: 8%;
+            font-size: 4rem;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Water surface */
+        .water-surface {
+            position: absolute;
+            top: 35%;
+            left: 0;
+            right: 0;
+            height: 12px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 50;
+            pointer-events: none;
+            gap: 8px;
+        }
+
+        .hud-box {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(5px);
+            border-radius: 14px;
+            padding: 10px 14px;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .hud-score {
+            color: #d97706;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .hud-level {
+            color: #2563eb;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .hud-combo {
+            color: #ea580c;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .hud-question {
+            background: linear-gradient(to right, #a78bfa, #ec4899);
+            border-radius: 18px;
+            padding: 10px 20px;
+            border: 3px solid #fde047;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: background 0.3s;
+        }
+
+        .hud-question.correct {
+            background: linear-gradient(to right, #4ade80, #22c55e);
+        }
+
+        .hud-question.wrong {
+            background: linear-gradient(to right, #f87171, #ef4444);
+        }
+
+        .hud-question p {
+            color: white;
+            font-weight: bold;
+            font-size: 1.6rem;
+            text-align: center;
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .hud-lives {
+            display: flex;
+            gap: 3px;
+        }
+
+        .hud-lives span {
+            font-size: 1.4rem;
+        }
+
+        .hud-lives span.lost {
+            opacity: 0.3;
+            filter: grayscale(1);
+        }
+
+        /* Bubbles */
+        .bubble {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 20;
+            transition: transform 0.15s;
+        }
+
+        .bubble:hover {
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        .bubble-inner {
+            position: relative;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(186,230,253,0.8), rgba(147,197,253,0.7));
+            border: 3px solid rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(59,130,246,0.2), inset 0 -3px 8px rgba(59,130,246,0.1);
+        }
+
+        .bubble-inner:hover {
+            border-color: #fbbf24;
+            box-shadow: 0 6px 25px rgba(251,191,36,0.4), inset 0 -3px 8px rgba(59,130,246,0.1);
+        }
+
+        .bubble-inner .shine {
+            position: absolute;
+            top: 12%;
+            left: 18%;
+            width: 25%;
+            height: 18%;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+        }
+
+        .bubble-inner .value {
+            font-weight: 900;
+            color: #1e3a8a;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+            font-size: 2rem;
+            z-index: 2;
+        }
+
+        .bubble-glow {
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: rgba(147,197,253,0.4);
+            filter: blur(10px);
+        }
+
+        /* Projectile */
+        .projectile {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .projectile-ball {
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b);
+            border-radius: 50%;
+            border: 2px solid #fde047;
+            box-shadow: 0 3px 8px rgba(245,158,11,0.4);
+        }
+
+        .projectile-trail {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 25px;
+            background: linear-gradient(to bottom, #fbbf24, #fde047, transparent);
+            border-radius: 4px;
+            opacity: 0.9;
+        }
+
+        /* Explosion */
+        .explosion {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 40;
+            pointer-events: none;
+            animation: explode 1s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        .explosion-text {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            animation: fadeUp 1s ease-out forwards;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-25px); }
+        }
+
+        .explosion-text.correct { color: #16a34a; }
+        .explosion-text.wrong { color: #dc2626; }
+
+        /* Ship */
+        #ship {
+            position: absolute;
+            z-index: 30;
+            transform: translateX(-50%);
+            transition: left 0.08s linear;
+            pointer-events: none;
+        }
+
+        #ship .ship-body {
+            font-size: 4rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+        }
+
+        #ship .water-splash {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            filter: blur(4px);
+        }
+
+        /* Bottom water */
+        .bottom-water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 22%;
+            pointer-events: none;
+        }
+
+        .bottom-water .water-fill {
+            position: absolute;
+            inset: 0;
+            top: 15px;
+            background: linear-gradient(to bottom, rgba(186,230,253,0.6), rgba(147,197,253,0.8));
+        }
+
+        .bottom-water .fish {
+            position: absolute;
+            animation: swim 3s ease-in-out infinite;
+        }
+
+        @keyframes swim {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-6px) translateX(5px); }
+            75% { transform: translateY(6px) translateX(-5px); }
+        }
+
+        /* Bottom hint */
+        .bottom-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(30,58,138,0.5);
+            font-size: 0.8rem;
+            z-index: 50;
+            pointer-events: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* ===== Game Over Screen ===== */
+        #gameOverScreen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, #fef3c7, #fde68a, #fbbf24);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        #gameOverScreen .content {
+            text-align: center;
+            padding: 1rem;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        #gameOverScreen .icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        #gameOverScreen h1 {
+            font-size: 2.5rem;
+            color: #92400e;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+        }
+
+        #gameOverScreen .new-record {
+            background: rgba(255,255,255,0.7);
+            border: 3px solid #f59e0b;
+            border-radius: 14px;
+            padding: 10px;
+            margin-bottom: 1rem;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+
+        #gameOverScreen .new-record p {
+            color: #92400e;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        #gameOverScreen .stats {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.9);
+            border-radius: 18px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        #gameOverScreen .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        #gameOverScreen .stat-item .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        #gameOverScreen .stat-item .stat-label {
+            color: #92400e;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #gameOverScreen .table-review {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.9);
+            border-radius: 18px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        #gameOverScreen .table-review h3 {
+            color: #92400e;
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        #gameOverScreen .table-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        #gameOverScreen .table-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            padding: 8px 10px;
+            color: #1e3a8a;
+            font-size: 1rem;
+            font-weight: 700;
+            border: 1px solid rgba(147,197,253,0.5);
+        }
+
+        #gameOverScreen .restart-btn {
+            background: linear-gradient(to right, #34d399, #10b981);
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+            padding: 1rem 2.5rem;
+            border: 4px solid #a7f3d0;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+        }
+
+        #gameOverScreen .restart-btn:hover {
+            transform: scale(1.1);
+        }
+
+        #gameOverScreen .restart-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            #startScreen h1 { font-size: 2rem; }
+            #startScreen .subtitle { font-size: 1.2rem; }
+            #startScreen .ship-icon { font-size: 4rem; }
+            .hud-question p { font-size: 1.3rem; }
+            #ship .ship-body { font-size: 3rem; }
+            .bubble-inner .value { font-size: 1.6rem; }
+            #gameOverScreen h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="startScreen">
+        <div class="clouds">
+            <div class="cloud">☁️</div>
+            <div class="cloud">☁️</div>
+            <div class="cloud">☁️</div>
+            <div class="cloud">☁️</div>
+        </div>
+        <div class="water-bg"></div>
+        <div class="content">
+            <div class="ship-icon">⛵</div>
+            <h1>لعبة جدول الضرب</h1>
+            <div class="subtitle">جدول الضرب رقم ٣ ✖️٣</div>
+            <p class="desc">ساعد السفينة الحربية في إطلاق القذائف على الفقاعات التي تحتوي على الإجابات الصحيحة!</p>
+            <button class="start-btn" onclick="startGame()">🎮 ابدأ اللعبة</button>
+            <div id="highScoreDisplay"></div>
+            <div class="instructions">
+                <h3>📋 طريقة اللعب</h3>
+                <ul>
+                    <li><span>👆</span><span>حرّك إصبعك أو الماوس لتحريك السفينة</span></li>
+                    <li><span>🫧</span><span>انقر على الفقاعة التي تحتوي على الإجابة الصحيحة</span></li>
+                    <li><span>💣</span><span>السفينة تطلق القذيفة على الفقاعة!</span></li>
+                    <li><span>❤️</span><span>لديك ٣ حياة - لا تدع الفقاعات تهرب!</span></li>
+                    <li><span>🔥</span><span>أجب بشكل صحيح متتالياً لنقاط إضافية!</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen">
+        <!-- Sky -->
+        <div class="sky">
+            <div class="sun">🌞</div>
+            <div class="cloud" style="top:8%;left:12%;font-size:3rem;">☁️</div>
+            <div class="cloud" style="top:15%;right:18%;font-size:2.5rem;animation-delay:1s;">☁️</div>
+            <div class="cloud" style="top:5%;left:50%;font-size:3.5rem;animation-delay:2s;">☁️</div>
+            <div class="cloud" style="top:22%;left:30%;font-size:2rem;animation-delay:0.5s;">☁️</div>
+        </div>
+
+        <!-- Water surface -->
+        <div class="water-surface">
+            <svg width="100%" height="100%" viewBox="0 0 1200 12" preserveAspectRatio="none">
+                <path d="M0,6 Q50,2 100,6 Q150,10 200,6 Q250,2 300,6 Q350,10 400,6 Q450,2 500,6 Q550,10 600,6 Q650,2 700,6 Q750,10 800,6 Q850,2 900,6 Q950,10 1000,6 Q1050,2 1100,6 Q1150,10 1200,6" 
+                      stroke="rgba(255,255,255,0.8)" stroke-width="3" fill="none">
+                    <animate attributeName="d" dur="2s" repeatCount="indefinite"
+                        values="M0,6 Q50,2 100,6 Q150,10 200,6 Q250,2 300,6 Q350,10 400,6 Q450,2 500,6 Q550,10 600,6 Q650,2 700,6 Q750,10 800,6 Q850,2 900,6 Q950,10 1000,6 Q1050,2 1100,6 Q1150,10 1200,6;
+                                M0,6 Q50,10 100,6 Q150,2 200,6 Q250,10 300,6 Q350,2 400,6 Q450,10 500,6 Q550,2 600,6 Q650,10 700,6 Q750,2 800,6 Q850,10 900,6 Q950,2 1000,6 Q1050,10 1100,6 Q1150,2 1200,6;
+                                M0,6 Q50,2 100,6 Q150,10 200,6 Q250,2 300,6 Q350,10 400,6 Q450,2 500,6 Q550,10 600,6 Q650,2 700,6 Q750,10 800,6 Q850,2 900,6 Q950,10 1000,6 Q1050,2 1100,6 Q1150,10 1200,6" />
+                </path>
+            </svg>
+        </div>
+
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-box">
+                <div class="hud-score" id="scoreDisplay">⭐ ٠</div>
+                <div class="hud-level" id="levelDisplay">المستوى ١</div>
+                <div class="hud-combo" id="comboDisplay" style="display:none;">🔥 ×٢</div>
+            </div>
+            <div class="hud-question" id="questionBox">
+                <p id="questionText">٣ × ١ = ؟</p>
+            </div>
+            <div class="hud-box">
+                <div class="hud-lives" id="livesDisplay">
+                    <span>❤️</span><span>❤️</span><span>❤️</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bubbles container -->
+        <div id="bubblesContainer"></div>
+
+        <!-- Projectiles container -->
+        <div id="projectilesContainer"></div>
+
+        <!-- Explosions container -->
+        <div id="explosionsContainer"></div>
+
+        <!-- Ship -->
+        <div id="ship" style="left: 50%; top: 76%;">
+            <div class="ship-body">⛵</div>
+            <div class="water-splash"></div>
+        </div>
+
+        <!-- Bottom water -->
+        <div class="bottom-water">
+            <svg style="position:absolute;top:0;width:200%;height:30px;" viewBox="0 0 2400 30" preserveAspectRatio="none">
+                <path d="M0,15 C200,5 400,25 600,15 C800,5 1000,25 1200,15 C1400,5 1600,25 1800,15 C2000,5 2200,25 2400,15 L2400,30 L0,30 Z" fill="rgba(186,230,253,0.6)">
+                    <animateTransform attributeName="transform" type="translate" from="0,0" to="-1200,0" dur="3s" repeatCount="indefinite" />
+                </path>
+            </svg>
+            <div class="water-fill"></div>
+            <div class="fish" style="bottom:20%;left:15%;font-size:1.5rem;animation-duration:3s;">🐟</div>
+            <div class="fish" style="bottom:35%;right:25%;font-size:1.2rem;animation-duration:4s;">🐠</div>
+            <div class="fish" style="bottom:15%;left:55%;font-size:1.5rem;animation-duration:2.5s;">🐡</div>
+            <div class="fish" style="bottom:25%;left:80%;font-size:1.1rem;animation-duration:3.5s;">🦀</div>
+            <div class="fish" style="bottom:5%;left:35%;font-size:1.3rem;">🌿</div>
+            <div class="fish" style="bottom:5%;right:45%;font-size:1.3rem;">🌿</div>
+        </div>
+
+        <!-- Bottom hint -->
+        <div class="bottom-hint">حرّك إصبعك أو الماوس • انقر على الفقاعة الصحيحة</div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen">
+        <div class="content">
+            <div class="icon">🏆</div>
+            <h1>انتهت اللعبة!</h1>
+            <div id="newRecordBox" class="new-record" style="display:none;">
+                <p>🎉 رقم قياسي جديد! 🎉</p>
+            </div>
+            <div class="stats">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="finalScore" style="color:#d97706;">٠</div>
+                        <div class="stat-label">النقاط</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="finalLevel" style="color:#2563eb;">١</div>
+                        <div class="stat-label">المستوى</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="finalAnswered" style="color:#7c3aed;">٠</div>
+                        <div class="stat-label">إجابات صحيحة</div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-review">
+                <h3>📊 جدول الضرب لـ ٣</h3>
+                <div class="table-grid" id="tableGrid"></div>
+            </div>
+            <button class="restart-btn" onclick="startGame()">🔄 العب مرة أخرى</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== Game State =====
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let combo = 0;
+        let questionsAnswered = 0;
+        let currentQuestion = { multiplier: 1, answer: 3 };
+        let bubbles = [];
+        let shipX = 50;
+        let isShooting = false;
+        let gameRunning = false;
+        let animationId = null;
+        let highScore = parseInt(localStorage.getItem('mult3_highscore') || '0');
+
+        // ===== Utility =====
+        function toArabicNum(num) {
+            return num.toLocaleString('ar-EG');
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById(screenId).style.display = 'flex';
+        }
+
+        // ===== High Score Display =====
+        function updateHighScoreDisplay() {
+            const el = document.getElementById('highScoreDisplay');
+            if (highScore > 0) {
+                el.textContent = '🏆 أعلى نتيجة: ' + toArabicNum(highScore);
+            } else {
+                el.textContent = '';
+            }
+        }
+
+        // ===== Question Generation =====
+        function generateQuestion() {
+            const multiplier = Math.floor(Math.random() * 12) + 1;
+            return { multiplier, answer: 3 * multiplier };
+        }
+
+        // ===== Bubble Generation =====
+        function generateBubbles(answer) {
+            const newBubbles = [];
+            const usedValues = new Set();
+            usedValues.add(answer);
+
+            // Correct answer - bigger bubble
+            newBubbles.push({
+                id: Date.now() + Math.random(),
+                value: answer,
+                x: 20 + Math.random() * 60,
+                y: 100 + Math.random() * 10,
+                speed: 0.12 + Math.random() * 0.12,
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.012 + Math.random() * 0.012,
+                size: 75 + Math.random() * 10
+            });
+
+            // Wrong answers
+            const possibleWrongs = [];
+            for (let i = 1; i <= 36; i++) {
+                if (i !== answer) possibleWrongs.push(i);
+            }
+            possibleWrongs.sort((a, b) => Math.abs(a - answer) - Math.abs(b - answer));
+            const selectedWrongs = possibleWrongs.slice(0, 5);
+
+            selectedWrongs.forEach(val => {
+                newBubbles.push({
+                    id: Date.now() + Math.random(),
+                    value: val,
+                    x: 10 + Math.random() * 80,
+                    y: 100 + Math.random() * 15,
+                    speed: 0.12 + Math.random() * 0.15,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.012 + Math.random() * 0.015,
+                    size: 65 + Math.random() * 10
+                });
+            });
+
+            return newBubbles;
+        }
+
+        // ===== Render Bubbles =====
+        function renderBubbles() {
+            const container = document.getElementById('bubblesContainer');
+            container.innerHTML = '';
+            bubbles.forEach(bubble => {
+                const el = document.createElement('div');
+                el.className = 'bubble';
+                el.style.left = bubble.x + '%';
+                el.style.top = bubble.y + '%';
+                el.innerHTML = `
+                    <div class="bubble-glow"></div>
+                    <div class="bubble-inner" style="width:${bubble.size}px;height:${bubble.size}px;">
+                        <div class="shine"></div>
+                        <span class="value">${toArabicNum(bubble.value)}</span>
+                    </div>
+                `;
+                el.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    handleBubbleClick(bubble);
+                });
+                container.appendChild(el);
+            });
+        }
+
+        // ===== Handle Bubble Click =====
+        function handleBubbleClick(bubble) {
+            if (isShooting || !gameRunning) return;
+            isShooting = true;
+
+            const targetX = bubble.x;
+            const targetY = bubble.y;
+
+            createProjectile(shipX, 76, targetX, targetY, () => {
+                if (bubble.value === currentQuestion.answer) {
+                    combo++;
+                    const bonusPoints = combo >= 3 ? 5 * combo : 0;
+                    const points = 10 * level + bonusPoints;
+                    score += points;
+                    questionsAnswered++;
+
+                    if (questionsAnswered % 5 === 0) {
+                        level++;
+                    }
+
+                    createExplosion(targetX, targetY, true, '✅ صحيح! +' + toArabicNum(points));
+                    showFeedback('correct');
+
+                    bubbles = bubbles.filter(b => b.id !== bubble.id);
+                    renderBubbles();
+                    updateHUD();
+
+                    setTimeout(() => {
+                        nextQuestion();
+                        isShooting = false;
+                    }, 900);
+                } else {
+                    combo = 0;
+                    lives--;
+                    createExplosion(targetX, targetY, false, '❌ خطأ!');
+                    showFeedback('wrong');
+
+                    bubbles = bubbles.filter(b => b.id !== bubble.id);
+                    renderBubbles();
+                    updateHUD();
+
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                    isShooting = false;
+                }
+            });
+        }
+
+        // ===== Create Projectile =====
+        function createProjectile(startX, startY, targetX, targetY, onComplete) {
+            const container = document.getElementById('projectilesContainer');
+            const el = document.createElement('div');
+            el.className = 'projectile';
+            el.innerHTML = '<div class="projectile-ball"></div><div class="projectile-trail"></div>';
+            el.style.left = startX + '%';
+            el.style.top = startY + '%';
+            container.appendChild(el);
+
+            const duration = 400;
+            const startTime = Date.now();
+
+            function animateProjectile() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 2);
+
+                const currentX = startX + (targetX - startX) * eased;
+                const currentY = startY + (targetY - startY) * eased;
+
+                el.style.left = currentX + '%';
+                el.style.top = currentY + '%';
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateProjectile);
+                } else {
+                    el.remove();
+                    if (onComplete) onComplete();
+                }
+            }
+
+            requestAnimationFrame(animateProjectile);
+        }
+
+        // ===== Create Explosion =====
+        function createExplosion(x, y, correct, text) {
+            const container = document.getElementById('explosionsContainer');
+            const el = document.createElement('div');
+            el.className = 'explosion';
+            el.style.left = x + '%';
+            el.style.top = y + '%';
+            el.innerHTML = `
+                <div style="font-size:3.5rem;">${correct ? '✨' : '💫'}</div>
+                <div class="explosion-text ${correct ? 'correct' : 'wrong'}">${text}</div>
+            `;
+            container.appendChild(el);
+
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        // ===== Show Feedback =====
+        function showFeedback(type) {
+            const box = document.getElementById('questionBox');
+            box.classList.remove('correct', 'wrong');
+            box.classList.add(type);
+            setTimeout(() => box.classList.remove('correct', 'wrong'), 800);
+        }
+
+        // ===== Update HUD =====
+        function updateHUD() {
+            document.getElementById('scoreDisplay').textContent = '⭐ ' + toArabicNum(score);
+            document.getElementById('levelDisplay').textContent = 'المستوى ' + toArabicNum(level);
+            
+            const comboEl = document.getElementById('comboDisplay');
+            if (combo >= 2) {
+                comboEl.style.display = 'block';
+                comboEl.textContent = '🔥 ×' + toArabicNum(combo);
+            } else {
+                comboEl.style.display = 'none';
+            }
+
+            const livesEl = document.getElementById('livesDisplay');
+            livesEl.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const span = document.createElement('span');
+                span.textContent = i < lives ? '❤️' : '🤍';
+                if (i >= lives) span.className = 'lost';
+                livesEl.appendChild(span);
+            }
+        }
+
+        // ===== Next Question =====
+        function nextQuestion() {
+            currentQuestion = generateQuestion();
+            bubbles = generateBubbles(currentQuestion.answer);
+            renderBubbles();
+            document.getElementById('questionText').textContent = '٣ × ' + toArabicNum(currentQuestion.multiplier) + ' = ؟';
+        }
+
+        // ===== Game Loop =====
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            let escaped = false;
+            bubbles.forEach(b => {
+                b.y -= b.speed;
+                b.wobble += b.wobbleSpeed;
+                b.x += Math.sin(b.wobble) * 0.1;
+                if (b.y < -5) escaped = true;
+            });
+
+            if (escaped && !isShooting) {
+                lives--;
+                combo = 0;
+                showFeedback('wrong');
+                updateHUD();
+
+                if (lives <= 0) {
+                    endGame();
+                    return;
+                }
+                nextQuestion();
+            }
+
+            renderBubbles();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // ===== Ship Movement =====
+        function handlePointerMove(e) {
+            if (!gameRunning) return;
+            const gameScreen = document.getElementById('gameScreen');
+            const rect = gameScreen.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            shipX = Math.max(8, Math.min(92, x));
+            document.getElementById('ship').style.left = shipX + '%';
+        }
+
+        // ===== Start Game =====
+        function startGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            combo = 0;
+            questionsAnswered = 0;
+            isShooting = false;
+            gameRunning = true;
+            shipX = 50;
+
+            showScreen('gameScreen');
+            updateHUD();
+            nextQuestion();
+
+            document.getElementById('ship').style.left = '50%';
+
+            document.getElementById('bubblesContainer').innerHTML = '';
+            document.getElementById('projectilesContainer').innerHTML = '';
+            document.getElementById('explosionsContainer').innerHTML = '';
+
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // ===== End Game =====
+        function endGame() {
+            gameRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+
+            const isNewRecord = score > highScore;
+            if (isNewRecord) {
+                highScore = score;
+                localStorage.setItem('mult3_highscore', score.toString());
+            }
+
+            setTimeout(() => {
+                showScreen('gameOverScreen');
+
+                document.getElementById('finalScore').textContent = toArabicNum(score);
+                document.getElementById('finalLevel').textContent = toArabicNum(level);
+                document.getElementById('finalAnswered').textContent = toArabicNum(questionsAnswered);
+
+                const newRecordBox = document.getElementById('newRecordBox');
+                newRecordBox.style.display = isNewRecord && score > 0 ? 'block' : 'none';
+
+                const tableGrid = document.getElementById('tableGrid');
+                tableGrid.innerHTML = '';
+                for (let i = 1; i <= 12; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'table-item';
+                    item.textContent = '٣ × ' + toArabicNum(i) + ' = ' + toArabicNum(3 * i);
+                    tableGrid.appendChild(item);
+                }
+            }, 500);
+        }
+
+        // ===== Event Listeners =====
+        document.getElementById('gameScreen').addEventListener('pointermove', handlePointerMove);
+        document.getElementById('gameScreen').addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                handlePointerMove(e.touches[0]);
+            }
+        }, { passive: false });
+
+        // ===== Init =====
+        updateHighScoreDisplay();
+        showScreen('startScreen');
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
