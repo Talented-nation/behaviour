@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حديقة جدول الضرب ٤ - لعبة مطابقة الأواني</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Readex+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Tajawal', 'Readex Pro', sans-serif;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dbede3 50%, #ffd3b6 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 10px;
+        }
+
+        /* Flower and Pot Animations */
+        .flower-hover {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .flower-hover:hover {
+            transform: scale(1.08) rotate(3deg);
+        }
+        .pot-dropzone {
+            transition: all 0.3s ease;
+        }
+        .pot-dropzone.drag-over {
+            transform: scale(1.05);
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Time Bar Animation Transition */
+        #timer-bar {
+            transition: width 0.2s linear, background-color 0.3s ease;
+        }
+
+        /* Bloom Animation */
+        @keyframes bloom-growth {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            70% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .bloom-anim {
+            animation: bloom-growth 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Gentle Pulse */
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-gentle {
+            animation: gentle-pulse 3s infinite ease-in-out;
+        }
+
+        .flower-shadow {
+            filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.15));
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 antialiased selection:bg-emerald-200">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-emerald-100 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shadow-emerald-200 transform -rotate-3">
+                    <span>🌸</span>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-emerald-800 leading-tight">حديقة جدول الضرب ٤</h1>
+                    <p class="text-xs text-emerald-600 font-semibold">لعبة مطابقة الأواني والزهور</p>
+                </div>
+            </div>
+
+            <!-- Stats & Controls -->
+            <div class="flex items-center gap-3">
+                <button id="pause-btn" onclick="togglePause()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm transition flex items-center gap-1.5 shadow-sm">
+                    <i id="pause-icon" class="fa-solid fa-pause"></i>
+                    <span id="pause-text">إيقاف مؤقت</span>
+                </button>
+                <button id="sound-btn" onclick="toggleSound()" class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 transition flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+                <div class="bg-amber-400 text-amber-950 font-black px-3.5 py-1.5 rounded-xl text-base flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-star text-amber-100"></i>
+                    <span id="score-counter">٠</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-start">
+
+        <!-- GAME AREA -->
+        <section id="mode-match" class="flex flex-col gap-5">
+            
+            <!-- Instruction & Timer Bar Section -->
+            <div class="bg-white/90 backdrop-blur rounded-3xl p-4 md:p-5 shadow-sm border border-emerald-100 flex flex-col gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 font-black flex items-center justify-center text-lg">💡</span>
+                        <div>
+                            <h2 class="font-bold text-slate-800 text-base md:text-lg">قم بسحب وإسقاط الزهرة إلى أصيص النبتة الصحيح!</h2>
+                            <p class="text-xs md:text-sm text-slate-500">أو اضغط على الزهرة ثم اضغط على الأصيص المناسب.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                        <!-- Progress counter -->
+                        <div class="text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
+                            التقدم: <span id="match-progress" class="text-emerald-600 font-extrabold text-lg">٠ / ١٢</span>
+                        </div>
+                        
+                        <!-- Reset button -->
+                        <button onclick="resetMatchGame()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            <span>إعادة اللعب</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIME BAR COMPONENT -->
+                <div class="mt-2 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
+                        <span class="flex items-center gap-1 text-emerald-700">
+                            <i class="fa-solid fa-hourglass-half animate-spin"></i>
+                            الوقت المتبقي:
+                        </span>
+                        <span id="timer-text" class="text-sm font-black font-mono text-emerald-700">٠١:٠٠</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5 border border-slate-300 shadow-inner relative">
+                        <div id="timer-bar" class="h-full bg-emerald-500 rounded-full w-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Work Area Split: Target Pots & Flower Bank -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Target Pots Grid -->
+                <div class="lg:col-span-8 bg-white/70 backdrop-blur rounded-3xl p-4 md:p-6 border border-emerald-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-4 px-2">
+                        <h3 class="font-black text-slate-700 text-lg flex items-center gap-2">
+                            <span>🪴</span> أواني جدول الضرب (٤)
+                        </h3>
+                        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-lg">طابق المسألة بالنتيجة</span>
+                    </div>
+
+                    <!-- Pots Grid -->
+                    <div id="pots-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                        <!-- Pots dynamically generated here -->
+                    </div>
+                </div>
+
+                <!-- Flower Bank -->
+                <div class="lg:col-span-4 bg-emerald-500/10 backdrop-blur rounded-3xl p-4 md:p-5 border border-emerald-200 shadow-sm flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-black text-emerald-900 text-lg flex items-center gap-2">
+                            <span>🌸</span> زهور الإجابات
+                        </h3>
+                        <span class="text-xs bg-white text-emerald-700 font-bold px-2.5 py-1 rounded-lg shadow-sm">اسحب من هنا</span>
+                    </div>
+                    
+                    <!-- Flowers Grid -->
+                    <div id="flowers-container" class="flex flex-wrap lg:grid lg:grid-cols-2 gap-3 justify-center items-center min-h-[220px]">
+                        <!-- Flowers dynamically generated -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Celebration / Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border-4 border-amber-300 flex flex-col items-center gap-4 animate-gentle">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-4xl shadow-inner">
+                🏆
+            </div>
+            <h2 class="text-2xl font-black text-slate-800">ممتاز يا بطل! 🎉</h2>
+            <p class="text-slate-600 text-sm leading-relaxed">
+                لقد أتقنت جدول الضرب للأعداد في رقم ٤ بنجاح وزرعت كامل الحديقة!
+            </p>
+            <div class="bg-amber-50 rounded-2xl p-4 w-full flex justify-around border border-amber-200">
+                <div>
+                    <span class="block text-xs text-slate-400 font-bold">النقاط الإجمالية</span>
+                    <span id="final-score" class="text-2xl font-black text-amber-600">٠</span>
+                </div>
+                <div>
+                    <span class="block text-xs text-slate-400 font-bold">الوقت المتبقي</span>
+                    <span id="final-time" class="text-2xl font-black text-emerald-600">٠٠:٠٠</span>
+                </div>
+            </div>
+            <button onclick="closeVictoryModal()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-base shadow-lg shadow-emerald-200 transition">
+                اللعب مرة أخرى
+            </button>
+        </div>
+    </div>
+
+    <!-- Time Over / Game Over Modal -->
+    <div id="gameover-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border-4 border-rose-300 flex flex-col items-center gap-4">
+            <div class="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center text-4xl shadow-inner">
+                ⏳
+            </div>
+            <h2 class="text-2xl font-black text-slate-800">انتهى الوقت! ⏱️</h2>
+            <p class="text-slate-600 text-sm leading-relaxed">
+                حاول مرة أخرى وزرع الزهور بسرعة أكبر لتفوز بالتحدي!
+            </p>
+            <button onclick="closeGameOverModal()" class="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-base shadow-lg shadow-rose-200 transition">
+                إعادة المحاولة
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Synth Web API Engine Script -->
+    <script>
+        // --- Web Audio API synth ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'win') {
+                    const notes = [400, 500, 600, 800, 1000];
+                    notes.forEach((freq, index) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.2, now + index * 0.12);
+                        g.gain.linearRampToValueAtTime(0.01, now + index * 0.12 + 0.25);
+                        o.start(now + index * 0.12);
+                        o.stop(now + index * 0.12 + 0.25);
+                    });
+                } else if (type === 'gameover') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.6);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch(e) {
+                console.log('Audio playback ignored', e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-btn');
+            if (soundEnabled) {
+                btn.innerHTML = '<i class="fa-solid fa-volume-high text-lg"></i>';
+                btn.className = 'w-10 h-10 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 transition flex items-center justify-center shadow-sm';
+                playSound('pop');
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-lg"></i>';
+                btn.className = 'w-10 h-10 rounded-xl bg-slate-200 text-slate-500 hover:bg-slate-300 transition flex items-center justify-center shadow-sm';
+            }
+        }
+
+        // --- Eastern Arabic Numerals Helper ---
+        const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        function toArabicNum(num) {
+            return num.toString().replace(/\d/g, d => arabicDigits[d]);
+        }
+
+        function formatArabicTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const formattedMins = mins < 10 ? '0' + mins : mins;
+            const formattedSecs = secs < 10 ? '0' + secs : secs;
+            return `${toArabicNum(formattedMins)}:${toArabicNum(formattedSecs)}`;
+        }
+
+        // --- Data Models (Multiplication Table of 4: 1 to 12) ---
+        const tableData = [
+            { multiplier: 1, result: 4 },
+            { multiplier: 2, result: 8 },
+            { multiplier: 3, result: 12 },
+            { multiplier: 4, result: 16 },
+            { multiplier: 5, result: 20 },
+            { multiplier: 6, result: 24 },
+            { multiplier: 7, result: 28 },
+            { multiplier: 8, result: 32 },
+            { multiplier: 9, result: 36 },
+            { multiplier: 10, result: 40 },
+            { multiplier: 11, result: 44 },
+            { multiplier: 12, result: 48 }
+        ];
+
+        // Flower Petal Color Palette
+        const flowerColors = [
+            '#f43f5e', '#ec4899', '#d946ef', '#a855f7',
+            '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9',
+            '#10b981', '#f59e0b', '#ef4444', '#14b8a6'
+        ];
+
+        let currentScore = 0;
+        let matchedCount = 0;
+        let selectedFlowerId = null;
+
+        // --- TIMER VARIABLES ---
+        const TOTAL_TIME = 60; // 60 seconds
+        let timeRemaining = TOTAL_TIME;
+        let timerInterval = null;
+        let isPaused = false;
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    timeRemaining--;
+                    updateTimerUI();
+
+                    if (timeRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        handleTimeOver();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerBar = document.getElementById('timer-bar');
+            const timerText = document.getElementById('timer-text');
+            
+            const pct = Math.max(0, (timeRemaining / TOTAL_TIME) * 100);
+            timerBar.style.width = `${pct}%`;
+            timerText.textContent = formatArabicTime(timeRemaining);
+
+            // Change Timer Bar Color based on urgency
+            if (pct > 50) {
+                timerBar.className = 'h-full bg-emerald-500 rounded-full w-full';
+            } else if (pct > 25) {
+                timerBar.className = 'h-full bg-amber-500 rounded-full w-full';
+            } else {
+                timerBar.className = 'h-full bg-rose-500 rounded-full w-full animate-pulse';
+            }
+        }
+
+        function togglePause() {
+            playSound('pop');
+            isPaused = !isPaused;
+            const icon = document.getElementById('pause-icon');
+            const text = document.getElementById('pause-text');
+
+            if (isPaused) {
+                icon.className = 'fa-solid fa-play';
+                text.textContent = 'استئناف';
+            } else {
+                icon.className = 'fa-solid fa-pause';
+                text.textContent = 'إيقاف مؤقت';
+            }
+        }
+
+        function addScore(points) {
+            currentScore += points;
+            document.getElementById('score-counter').textContent = toArabicNum(currentScore);
+        }
+
+        // ================= MATCHING GAME ENGINE =================
+        function initMatchGame() {
+            matchedCount = 0;
+            selectedFlowerId = null;
+            currentScore = 0;
+            timeRemaining = TOTAL_TIME;
+            isPaused = false;
+
+            document.getElementById('score-counter').textContent = toArabicNum(0);
+            document.getElementById('match-progress').textContent = `${toArabicNum(0)} / ${toArabicNum(tableData.length)}`;
+            
+            document.getElementById('pause-icon').className = 'fa-solid fa-pause';
+            document.getElementById('pause-text').textContent = 'إيقاف مؤقت';
+
+            updateTimerUI();
+            startTimer();
+
+            const potsContainer = document.getElementById('pots-container');
+            const flowersContainer = document.getElementById('flowers-container');
+
+            potsContainer.innerHTML = '';
+            flowersContainer.innerHTML = '';
+
+            // Shuffle flowers dataset
+            const shuffledFlowers = [...tableData].sort(() => Math.random() - 0.5);
+
+            // Render Pots (Sequential 1 to 12)
+            tableData.forEach((item) => {
+                const potCard = document.createElement('div');
+                potCard.className = `pot-dropzone bg-gradient-to-b from-amber-100 to-amber-200 border-2 border-amber-300 rounded-2xl p-3 flex flex-col items-center justify-between min-h-[150px] relative shadow-md`;
+                potCard.dataset.targetResult = item.result;
+                potCard.id = `pot-${item.result}`;
+
+                // Drag & Drop event listeners
+                potCard.addEventListener('dragover', handleDragOver);
+                potCard.addEventListener('dragleave', handleDragLeave);
+                potCard.addEventListener('drop', handleDrop);
+                potCard.addEventListener('click', () => handlePotClick(item.result));
+
+                potCard.innerHTML = `
+                    <div class="pot-slot-area w-full flex-grow flex items-center justify-center p-1 min-h-[80px]">
+                        <div class="empty-placeholder text-center text-amber-700/40 text-xs font-bold border-2 border-dashed border-amber-300/60 rounded-xl p-2 w-full h-full flex items-center justify-center">
+                            ضع الزهرة هنا
+                        </div>
+                    </div>
+                    <!-- Clay Pot SVG Illustration -->
+                    <div class="w-full flex flex-col items-center mt-1">
+                        <div class="w-full bg-amber-700 h-3 rounded-t-md shadow-sm"></div>
+                        <div class="w-5/6 bg-amber-600 h-10 rounded-b-xl flex items-center justify-center border-t border-amber-500 shadow-inner">
+                            <span class="text-white font-black text-sm dir-rtl font-mono tracking-wider">
+                                ٤ × ${toArabicNum(item.multiplier)} = ؟
+                            </span>
+                        </div>
+                    </div>
+                `;
+                potsContainer.appendChild(potCard);
+            });
+
+            // Render Flower Choices
+            shuffledFlowers.forEach((item, index) => {
+                const color = flowerColors[index % flowerColors.length];
+                const flowerDiv = document.createElement('div');
+                flowerDiv.id = `flower-${item.result}`;
+                flowerDiv.className = `flower-hover cursor-grab active:cursor-grabbing p-2 flex flex-col items-center justify-center w-20 h-24 sm:w-24 sm:h-28 relative`;
+                flowerDiv.draggable = true;
+                flowerDiv.dataset.result = item.result;
+
+                flowerDiv.addEventListener('dragstart', handleDragStart);
+                flowerDiv.addEventListener('click', () => handleFlowerClick(item.result));
+
+                flowerDiv.innerHTML = generateFlowerSVG(toArabicNum(item.result), color);
+                flowersContainer.appendChild(flowerDiv);
+            });
+        }
+
+        // SVG Helper to render cheerful flowers
+        function generateFlowerSVG(arabicText, petalColor) {
+            return `
+                <svg viewBox="0 0 100 100" class="w-full h-full flower-shadow overflow-visible">
+                    <g transform="translate(50, 45)">
+                        <!-- Petals -->
+                        <circle cx="0" cy="-22" r="14" fill="${petalColor}" />
+                        <circle cx="20" cy="-10" r="14" fill="${petalColor}" />
+                        <circle cx="20" cy="14" r="14" fill="${petalColor}" />
+                        <circle cx="0" cy="22" r="14" fill="${petalColor}" />
+                        <circle cx="-20" cy="14" r="14" fill="${petalColor}" />
+                        <circle cx="-20" cy="-10" r="14" fill="${petalColor}" />
+                        <!-- Center Disc -->
+                        <circle cx="0" cy="0" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="3" />
+                        <!-- Number Text -->
+                        <text x="0" y="6" font-family="Tajawal, sans-serif" font-weight="900" font-size="17" fill="#78350f" text-anchor="middle" dominant-baseline="central">${arabicText}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e) {
+            if (isPaused) return;
+            playSound('pop');
+            e.dataTransfer.setData('text/plain', e.currentTarget.dataset.result);
+        }
+
+        function handleDragOver(e) {
+            if (isPaused) return;
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (isPaused) return;
+            e.preventDefault();
+            const pot = e.currentTarget;
+            pot.classList.remove('drag-over');
+            const flowerResult = e.dataTransfer.getData('text/plain');
+            const targetResult = pot.dataset.targetResult;
+
+            checkMatch(flowerResult, targetResult, pot);
+        }
+
+        // Tap-to-select alternative for Mobile Users
+        function handleFlowerClick(result) {
+            if (isPaused) return;
+            playSound('pop');
+            document.querySelectorAll('#flowers-container > div').forEach(f => f.classList.remove('ring-4', 'ring-amber-400', 'rounded-2xl'));
+
+            if (selectedFlowerId === result) {
+                selectedFlowerId = null;
+            } else {
+                selectedFlowerId = result;
+                const selectedEl = document.getElementById(`flower-${result}`);
+                if (selectedEl) selectedEl.classList.add('ring-4', 'ring-amber-400', 'rounded-2xl');
+            }
+        }
+
+        function handlePotClick(targetResult) {
+            if (isPaused) return;
+            if (selectedFlowerId !== null) {
+                const pot = document.getElementById(`pot-${targetResult}`);
+                checkMatch(selectedFlowerId.toString(), targetResult.toString(), pot);
+            }
+        }
+
+        // Verification Logic
+        function checkMatch(flowerVal, potVal, potElement) {
+            if (flowerVal === potVal) {
+                // Correct Match
+                playSound('correct');
+                addScore(10);
+                matchedCount++;
+
+                // Bonus Time for correct answer
+                timeRemaining = Math.min(TOTAL_TIME, timeRemaining + 3);
+                updateTimerUI();
+
+                document.getElementById('match-progress').textContent = `${toArabicNum(matchedCount)} / ${toArabicNum(tableData.length)}`;
+
+                const flowerEl = document.getElementById(`flower-${flowerVal}`);
+                const slotArea = potElement.querySelector('.pot-slot-area');
+                
+                // Clear placeholder and mount flower inside pot slot
+                slotArea.innerHTML = '';
+                flowerEl.classList.remove('flower-hover', 'cursor-grab', 'ring-4', 'ring-amber-400');
+                flowerEl.draggable = false;
+                flowerEl.classList.add('bloom-anim', 'w-20', 'h-20');
+                slotArea.appendChild(flowerEl);
+
+                // Update Pot Visual
+                potElement.classList.remove('from-amber-100', 'to-amber-200');
+                potElement.classList.add('from-emerald-100', 'to-emerald-200', 'border-emerald-400');
+
+                selectedFlowerId = null;
+
+                // Victory check
+                if (matchedCount === tableData.length) {
+                    clearInterval(timerInterval);
+                    setTimeout(() => {
+                        triggerVictory();
+                    }, 500);
+                }
+            } else {
+                // Wrong Match - Penalty of 2 seconds
+                playSound('wrong');
+                timeRemaining = Math.max(0, timeRemaining - 2);
+                updateTimerUI();
+
+                potElement.classList.add('animate-bounce');
+                setTimeout(() => potElement.classList.remove('animate-bounce'), 500);
+            }
+        }
+
+        function handleTimeOver() {
+            playSound('gameover');
+            document.getElementById('gameover-modal').classList.remove('hidden');
+        }
+
+        function closeGameOverModal() {
+            playSound('pop');
+            document.getElementById('gameover-modal').classList.add('hidden');
+            resetMatchGame();
+        }
+
+        function resetMatchGame() {
+            playSound('pop');
+            initMatchGame();
+        }
+
+        // ================= VICTORY & CELEBRATION =================
+        function triggerVictory() {
+            playSound('win');
+            
+            // Launch Confetti
+            if (window.confetti) {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            document.getElementById('final-score').textContent = toArabicNum(currentScore);
+            document.getElementById('final-time').textContent = formatArabicTime(timeRemaining);
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        function closeVictoryModal() {
+            playSound('pop');
+            document.getElementById('victory-modal').classList.add('hidden');
+            resetMatchGame();
+        }
+
+        // Initialize Application on Window Load
+        window.onload = function() {
+            initMatchGame();
+        };
+    </script>
+</body>
+</html>
