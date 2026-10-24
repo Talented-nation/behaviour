@@ -283,7 +283,6 @@ async function showResults(){
  const total = session.answers.length;
  const acc = total ? Math.round(session.correct / total * 100) : 0;
 
- // تحديد المهارات غير المتقنة (التي تكررت فيها الأخطاء أو نسبة الخطأ فيها عالية)
  let unmastered = [];
  Object.entries(session.skillWrongCounts).forEach(([skill, stats])=>{
    if(stats.wrong > 0 && (stats.wrong / stats.total >= 0.4 || stats.wrong >= 2)){
@@ -298,7 +297,6 @@ async function showResults(){
  $("finalAccuracy").textContent = acc + "%";
  $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجاتك والمهارات في السحابة." : "أداء جيد، تواصلي التدريب المستمر.";
 
- // إرسال النتائج والمهارات غير المتقنة إلى جدول جوجل
  try {
    await fetch(SCRIPT_URL, {
      method: "POST",
