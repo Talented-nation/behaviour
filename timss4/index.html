@@ -297,18 +297,21 @@ async function showResults(){
  $("finalAccuracy").textContent = acc + "%";
  $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجاتك والمهارات في السحابة." : "أداء جيد، تواصلي التدريب المستمر.";
 
+ // استخدام URLSearchParams لإرسال البيانات بالصيغة التوافقية المضمونة لجوجل
+ const payload = new URLSearchParams({
+   studentName: session.name,
+   section: session.cls,
+   score: session.correct,
+   total: total,
+   unmasteredSkills: unmasteredStr
+ });
+
  try {
    await fetch(SCRIPT_URL, {
      method: "POST",
      mode: "no-cors",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({
-       studentName: session.name,
-       section: session.cls,
-       score: session.correct,
-       total: total,
-       unmasteredSkills: unmasteredStr
-     })
+     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+     body: payload.toString()
    });
  } catch(e) {
    console.log("Sync error:", e);
@@ -352,7 +355,7 @@ async function showTeacherDashboard(){
      const unmasteredText = row.unmasteredSkills || "لا يوجد (متقنة)";
 
      [row.studentName || "غير محدد", row.section || "4/1", score + "/" + total, pct + "%", lvl, unmasteredText, new Date(row.timestamp).toLocaleString('ar-BH')].forEach((val, idx)=>{
-       const td = document.createElement("td");
+       const td = document.append ? document.createElement("td") : document.createElement("td");
        if(idx === 4){
          const badge = document.createElement("span");
          badge.className = "level " + cls;
