@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تحدّي TIMSS الذكي | الصف الرابع</title>
+<!-- مكتبة Supabase السحابية لحفظ النتائج -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}button:focus-visible,input:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
+.primary{background:var(--teal);color:#fff}.secondary{background:#e7edf4;color:var(--navy)}.outline{background:#fff;border:1px solid #d5dee8;color:var(--navy)}button:disabled{opacity:.5;cursor:not-allowed}
+header{background:linear-gradient(120deg,#16324f,#0f8b8d);color:#fff;padding:20px 18px}
+.wrap{max-width:1000px;margin:auto;padding:20px 16px}
+.brand{display:flex;align-items:center;gap:13px}.logo{width:52px;height:52px;border-radius:16px;background:#ffffff20;display:grid;place-items:center;font-size:27px}
+h1{font-size:clamp(1.35rem,3vw,2rem);margin:0}header p{margin:3px 0 0;color:#e2f3f4}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;background:var(--mint);color:#08696a;padding:4px 10px;font-size:.82rem;font-weight:700}
+.card{background:#fff;border:1px solid #e1e8ef;border-radius:20px;padding:clamp(17px,3vw,27px);box-shadow:0 6px 22px #16324f0a;margin-bottom:16px}
+.hero{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;align-items:center}
+.hero-visual{background:linear-gradient(135deg,#e3f8f5,#e9efff);border-radius:18px;min-height:180px;display:grid;place-items:center;text-align:center;padding:20px}
+.big-number{font-size:clamp(2.8rem,8vw,5rem);font-weight:900;color:var(--teal);letter-spacing:2px}
+h2{margin:0 0 10px;font-size:1.35rem;color:var(--navy)}h3{margin:0 0 8px;color:var(--navy)}
+.muted{color:var(--muted)}.small{font-size:.9rem}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+.progress{height:9px;background:#e7edf4;border-radius:999px;overflow:hidden;margin:12px 0}.progress>div{height:100%;background:linear-gradient(90deg,var(--teal),#65c9b8);width:0;transition:width .25s}
+.timer-wrap{margin:12px 0 18px;padding:12px 14px;background:#f8fbfd;border:1px solid #e1e8ef;border-radius:14px}.timer-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-weight:700}.timer-track{height:12px;background:#e7edf4;border-radius:999px;overflow:hidden}.timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#0f8b8d,#65c9b8);border-radius:999px;transition:width 1s linear,background .2s}.timer-fill.warning{background:#f4b942}.timer-fill.danger{background:#b42318}.timer-number{font-variant-numeric:tabular-nums;color:var(--navy)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f7fafc;border-radius:14px;padding:12px;text-align:center}.stat strong{display:block;font-size:1.35rem;color:var(--navy)}
+.question{font-size:1.2rem;font-weight:700;line-height:1.9;margin:18px 0;direction:ltr;text-align:right;unicode-bidi:plaintext}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.answer{background:#fff;border:2px solid #dbe4ec;text-align:right;direction:ltr;unicode-bidi:plaintext;padding:14px;border-radius:13px;color:var(--ink);font-weight:500;min-height:58px}.answer:hover{border-color:var(--teal);background:#f3fbfa}.answer.selected{border-color:var(--teal);background:var(--mint)}.answer.correct{border-color:#5bbf97;background:#e8f8ef}.answer.wrong{border-color:#e39a91;background:#fff0ee}
+.feedback{border-radius:14px;padding:14px;margin-top:15px}.feedback.good{background:#e8f8ef;border:1px solid #b9e6ce}.feedback.bad{background:#fff5e5;border:1px solid #f1d49b}.feedback h3{margin-bottom:4px}
+.hidden{display:none!important}.skill-list{display:grid;gap:10px}.skill-row{display:grid;grid-template-columns:155px 1fr 50px;gap:12px;align-items:center}.bar{height:10px;background:#e8edf3;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;background:var(--teal)}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:520px}th,td{padding:10px;border-bottom:1px solid #e7edf2;text-align:right;vertical-align:top}th{background:#f5f8fb;color:var(--navy)}.level{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.82rem;font-weight:700;white-space:nowrap}.level-mastered{background:#e3f7ec;color:#087f5b}.level-developing{background:#fff3d6;color:#8a5a00}.level-support{background:#ffebe8;color:#a12b20}.level-pending{background:#edf2f7;color:#526174}.plan-cell{min-width:260px;white-space:normal}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.note{border-right:4px solid var(--gold);padding:10px 13px;background:#fff9e8;border-radius:8px}.mini{font-size:.85rem;color:var(--muted)}
+footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85rem}
+@media(max-width:650px){.hero{grid-template-columns:1fr}.hero-visual{min-height:120px}.answers{grid-template-columns:1fr}.skill-row{grid-template-columns:110px 1fr 42px}.stats{grid-template-columns:repeat(3,1fr)}.stat{padding:9px 4px}.stat strong{font-size:1.1rem}}
+
+#hintBtn { display: none !important; }
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding-top:0;padding-bottom:0">
+ <div class="brand"><div class="logo">∑</div><div><h1>تحدّي TIMSS الذكي</h1><p>مغامرة الأعداد والعمليات · الصف الرابع الابتدائي - مملكة البحرين</p></div></div>
+</div></header>
+<main class="wrap">
+<section id="home" class="card hero">
+ <div>
+  <span class="pill">منصة سحابية متكاملة</span>
+  <h2 style="margin-top:12px;font-size:1.65rem">هل أنتِ مستعدة لتحدّي الرياضيات؟</h2>
+  <p>أجيبي عن الأسئلة، واكتشفي مهاراتك، وحفظي نتائجك مباشرة في لوحة المعلمة السحابية.</p>
+  <ul class="small muted"><li>أسئلة شاملة من ملف الخادم المحلي (JSON).</li><li>تغذية راجعة فورية وتوضيح لخطوات الحل.</li><li>حفظ تلقائي للمحاولات في قاعدة البيانات المركزية.</li></ul>
+  <div class="card" style="padding:14px;margin-top:16px;box-shadow:none;background:#f8fbfd">
+  <h3>دخول الطالبة</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="مثال: سارة أحمد" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
+   <label>الصف / الشعبة<input id="className" maxlength="40" placeholder="مثال: 4/1" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
+  </div>
+  <p class="small muted">تُحفظ النتائج بشكل آمن ومباشر في السحابة.</p>
+  <div class="actions"><button class="primary" id="startBtn" disabled>جارٍ تحميل الأسئلة…</button><span id="questionLoadStatus" class="small muted" role="status">يتم جلب ملف الأسئلة...</span><button class="outline" id="howBtn">كيف تعمل اللعبة؟</button><button class="secondary" id="teacherBtn">لوحة المعلمة</button></div>
+ </div>
+ </div>
+ <div class="hero-visual"><div><div class="big-number">123 × 4</div><strong>فكّري، جرّبي، وتعلّمي!</strong><div class="muted small">كل سؤال يقربك من الإتقان</div></div></div>
+</section>
+<section id="how" class="card hidden">
+ <h2>كيف تعمل اللعبة؟</h2><p>تسجل اللعبة أداءك في كل مهارة وتُحفظ نتائجكِ في قاعدة البيانات السحابية المركزية لتتابع المعلمة تقدمكِ بكل سهولة.</p>
+ <button class="secondary" id="closeHow">العودة</button>
+</section>
+<section id="quiz" class="hidden">
+ <div class="card">
+  <div class="topline"><span id="skillPill" class="pill"></span><span id="difficultyLabel" class="muted small"></span></div>
+  <div class="topline"><span id="questionCount" class="muted small">السؤال ١ من ٣٠</span><span id="scoreLabel" class="muted small">الإجابات الصحيحة: 0</span></div>
+  <div class="progress"><div id="progressBar"></div></div>
+  <div class="timer-wrap" aria-label="الوقت المتبقي للإجابة">
+   <div class="timer-top"><span>الوقت المتبقي</span><span id="timerText" class="timer-number">٠١:٠٠</span></div>
+   <div class="timer-track" role="progressbar" aria-label="الوقت المتبقي للسؤال" aria-valuemin="0" aria-valuemax="60" aria-valuenow="60"><div id="timebar" class="timer-fill"></div></div>
+  </div>
+  <div id="questionText" class="question"></div>
+  <div id="answers" class="answers"></div>
+  <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+  <div class="actions">
+   <button id="hintBtn" class="outline">أحتاج إلى تلميح</button>
+   <button id="checkBtn" class="primary" disabled>تحقّقي من الإجابة</button>
+   <button id="nextBtn" class="primary hidden">السؤال التالي</button>
+  </div>
+  <div id="hintBox" class="feedback hidden"></div>
+ </div>
+ <div class="card">
+  <h3>مؤشرات تقدّمك</h3><div class="stats"><div class="stat"><strong id="statAnswered">0</strong><span class="small muted">أُجيب عنها</span></div><div class="stat"><strong id="statAccuracy">—</strong><span class="small muted">الدقة</span></div><div class="stat"><strong id="statStreak">0</strong><span class="small muted">صحيحة متتالية</span></div></div>
+ </div>
+</section>
+<section id="teacherDashboard" class="hidden">
+ <div class="card"><div class="topline"><div><span class="pill">لوحة سحابية مركزية</span><h2 style="margin-top:8px">لوحة متابعة المعلمات المشتركة</h2></div><button class="outline" id="backHomeBtn">العودة للرئيسية</button></div>
+ <p class="muted small">تعرض هذه اللوحة نتائج جميع الطالبات المسجلات عبر قاعدة البيانات السحابية.</p>
+ <div class="stats"><div class="stat"><strong id="dbStudents">0</strong><span class="small muted">طالبات مسجلات</span></div><div class="stat"><strong id="dbSessions">0</strong><span class="small muted">محاولات مكتملة</span></div><div class="stat"><strong id="dbAccuracy">—</strong><span class="small muted">الدقة العامة</span></div></div>
+ </div>
+ <div class="card"><h2>تصنيف مستويات الإتقان</h2><div class="stats"><div class="stat"><strong id="levelMastered">0</strong><span class="small muted">متقنات (80% فأعلى)</span></div><div class="stat"><strong id="levelDeveloping">0</strong><span class="small muted">في طور الإتقان (60–79%)</span></div><div class="stat"><strong id="levelSupport">0</strong><span class="small muted">يحتجن إلى دعم (أقل من 60%)</span></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>مستوى الإتقان</th><th>متوسط الإتقان</th><th>عدد المحاولات</th></tr></thead><tbody id="masteryTable"></tbody></table></div></div>
+ <div class="card"><h2>قائمة الطالبات اللاتي يحتجن إلى دعم</h2><div class="table-wrap"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>المهارة ذات الأولوية</th><th>الإجراء المقترح</th></tr></thead><tbody id="atRiskTable"></tbody></table></div></div>
+ <div class="card"><h2>ملخص جميع الطالبات</h2><div class="table-wrap"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>المحاولات</th><th>الدقة</th><th>مستوى الإتقان</th><th>تاريخ التسجيل</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+</section>
+<section id="results" class="hidden">
+ <div class="card">
+  <span class="pill">انتهى التحدّي وتم حفظ النتيجة سحابياً</span><h2 style="margin-top:10px">تقريرك التعليمي</h2>
+  <p id="resultMessage"></p>
+  <div class="stats"><div class="stat"><strong id="finalCorrect">0</strong><span class="small muted">إجابات صحيحة</span></div><div class="stat"><strong id="finalAccuracy">0%</strong><span class="small muted">الدقة الإجمالية</span></div><div class="stat"><strong id="finalHints">0</strong><span class="small muted">تلميحات مستخدمة</span></div></div>
+ </div>
+ <div class="card"><h2>الأداء بحسب المهارة</h2><div id="skillReport" class="skill-list"></div></div>
+ <div class="card"><h2>ملخص الإجابات</h2><div class="table-wrap"><table><thead><tr><th>السؤال</th><th>المهارة</th><th>إجابتك</th><th>النتيجة</th></tr></thead><tbody id="answerSummary"></tbody></table></div></div>
+ <div class="card"><h2>ماذا بعد؟</h2><p id="recommendation"></p><div class="actions"><button class="primary" id="restartBtn">إعادة التحدّي</button></div></div>
+</section>
+</main>
+<footer>منصة تحدّي الرياضيات TIMSS · متصلة بقاعدة البيانات السحابية Supabase · مملكة البحرين</footer>
+
+<script>
+// 1. تهيئة الاتصال السحابي بـ Supabase
+const SUPABASE_URL = 'https://tgfbemojxbnuipfibpz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnZmJlbW9qeGJudWlwZmJpYnB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzQzMjksImV4cCI6MjEwODQxMDMyOX0.SueRv_tavlqMvgSknHufgERmruKmrcugzQ_GJhVUOBk';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let QUESTIONS = [];
+let questionsReady = false;
+let questionTimerInterval = null;
+let questionSecondsLeft = 60;
+let currentAttemptId = null;
+let currentDbStudentId = null;
+
+const skillNames = {
+ N1:"الأعداد والقيمة المكانية", N2:"الجمع والطرح", N3:"الضرب والقسمة",
+ N4:"الكسور والأنماط", N5:"الهندسة والقياس", N6:"البيانات والمسائل اللفظية", N7:"الجبر والاستدلال"
+};
+
+const $ = id => document.getElementById(id);
+const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+
+// 2. تحميل الأسئلة من ملف questions.json الخارجي
+async function loadQuestions(){
+ try{
+  const response = await fetch('questions.json');
+  if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة الخارجي');
+  const data = await response.json();
+  
+  QUESTIONS = data.map(q => ({
+     id: q.id,
+     question: q.question,
+     options: q.options,
+     correct_answer: q.correct_answer,
+     skill: q.skill,
+     skill_code: q.skill_code || 'N3',
+     difficulty: q.difficulty || 2,
+     cognitive_domain: q.cognitive_domain || 'التطبيق',
+     solution_steps: q.solution_steps || '',
+     hint: q.hint || 'فكري في خطوات الحل بعناية.'
+  }));
+
+  questionsReady = true;
+  $('startBtn').disabled = false;
+  $('startBtn').textContent = 'ابدئي التحدّي';
+  $('questionLoadStatus').textContent = `تم تحميل ${arabicDigits(QUESTIONS.length)} سؤالًا بنجاح من الخادم.`;
+ }catch(error){
+  console.error('Question loading failed:', error);
+  $('startBtn').disabled = true;
+  $('startBtn').textContent = 'تعذّر تحميل الأسئلة';
+  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json في نفس المجلد.';
+ }
+}
+
+let session = null;
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// 3. بدء الجلسة والتحقق من الطالبة بالاسم والشعبة فقط وحفظ المحاولة في Supabase
+async function newSession(){
+ if(!questionsReady){alert("يرجى الانتظار حتى يتم تحميل الأسئلة.");return;}
+ const name=$("studentName").value.trim(), cls=$("className").value.trim();
+ if(!name){alert("يرجى إدخال اسم الطالبة قبل البدء.");$("studentName").focus();return;}
+
+ $('startBtn').disabled = true;
+ $('startBtn').textContent = 'جارٍ تسجيل الدخول سحابياً...';
+
+ try {
+   // التحقق من وجود الطالبة بالاسم والشعبة في قاعدة البيانات أو إنشاؤها تلقائياً
+   let { data: student, error: stErr } = await supabaseClient
+     .from('students')
+     .select('*')
+     .eq('full_name', name)
+     .eq('section', cls || '4/1')
+     .maybeSingle();
+
+   if (!student) {
+     const { data: newSt, error: createErr } = await supabaseClient
+       .from('students')
+       .insert([{ full_name: name, section: cls || '4/1', student_code: 'AUTO_' + Math.random().toString(36).slice(2,7) }])
+       .select()
+       .single();
+     if(createErr) throw createErr;
+     student = newSt;
+   }
+   currentDbStudentId = student.id;
+
+   const { data: attempt, error: attErr } = await supabaseClient
+     .from('attempts')
+     .insert([{ student_id: currentDbStudentId, start_time: new Date().toISOString() }])
+     .select()
+     .single();
+   
+   if(attErr) throw attErr;
+   currentAttemptId = attempt.id;
+
+ } catch(e) {
+   console.error('Database connection error:', e);
+   alert('تعذر الاتصال بقاعدة البيانات السحابية لحفظ النتائج. تأكدي من الاتصال بالشبكة.');
+   $('startBtn').disabled = false;
+   $('startBtn').textContent = 'ابدئي التحدّي';
+   return;
+ }
+
+ const pool = shuffle(QUESTIONS);
+ session = {pool, index:0, answers:[], correct:0, hints:0, streak:0, skillStats:{}, selected:null, checked:false, seen:new Set(), current:null, startedAt:new Date().toISOString()};
+ Object.keys(skillNames).forEach(k=>session.skillStats[k]={attempts:0,correct:0,wrong:0,streak:0});
+ 
+ $("home").classList.add("hidden"); $("how").classList.add("hidden"); $("results").classList.add("hidden"); $("teacherDashboard").classList.add("hidden"); $("quiz").classList.remove("hidden");
+ renderQuestion();
+}
+
+function chooseQuestion(){
+ if(session.index>=session.pool.length) return null;
+ const candidates=session.pool.filter(q=>!session.seen.has(q.id));
+ return candidates.length ? candidates[0] : null;
+}
+
+function renderQuestion(){
+ const q=chooseQuestion();
+ if(!q || session.index>=session.pool.length){showResults();return;}
+ session.current=q;session.selected=null;session.checked=false;session.seen.add(q.id);
+ $("skillPill").textContent=q.skill;
+ $("difficultyLabel").textContent="الصعوبة: "+(["","سهل","متوسط","صعب"][q.difficulty])+" · "+q.cognitive_domain;
+ $("questionCount").textContent=`السؤال ${arabicDigits(session.index+1)} من ${arabicDigits(session.pool.length)}`;
+ $("scoreLabel").textContent=`الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+ $("progressBar").style.width=(session.index/session.pool.length*100)+"%";
+ $("questionText").textContent=q.question;
+ $("answers").innerHTML="";
+ Object.entries(q.options).forEach(([key,val])=>{
+  const b=document.createElement("button");b.className="answer";b.textContent=`${({A:"أ",B:"ب",C:"ج",D:"د"})[key]}. ${val}`;
+  b.addEventListener("click",()=>selectAnswer(key));$("answers").appendChild(b);
+ });
+ $("feedback").classList.add("hidden");$("hintBox").classList.add("hidden");
+ $("checkBtn").classList.remove("hidden");$("checkBtn").disabled=true;$("nextBtn").classList.add("hidden");
+ updateStats();
+ startQuestionTimer();
+}
+
+function startQuestionTimer(){
+ stopQuestionTimer();
+ questionSecondsLeft=60;
+ updateTimerDisplay();
+ questionTimerInterval=setInterval(()=>{
+  if(!session || session.checked){stopQuestionTimer();return;}
+  questionSecondsLeft--;
+  updateTimerDisplay();
+  if(questionSecondsLeft<=0){stopQuestionTimer();handleTimeUp();}
+ },1000);
+}
+
+function stopQuestionTimer(){if(questionTimerInterval!==null){clearInterval(questionTimerInterval);questionTimerInterval=null;}}
+
+function updateTimerDisplay(){
+ const seconds=Math.max(0,questionSecondsLeft),mins=Math.floor(seconds/60),secs=seconds%60;
+ const timeText=String(mins).padStart(2,"0")+":"+String(secs).padStart(2,"0");
+ $("timerText").textContent=arabicDigits(timeText);
+ $("timebar").style.width=(seconds/60*100)+"%";
+ $("timebar").classList.toggle("warning",seconds<=30&&seconds>10);
+ $("timebar").classList.toggle("danger",seconds<=10);
+}
+
+async function recordAnswerToCloud(q, selectedOption, isCorrect, timeSpent){
+ if(!currentAttemptId) return;
+ try {
+   await supabaseClient.from('attempt_answers').insert([{
+     attempt_id: currentAttemptId,
+     selected_option: selectedOption,
+     is_correct: isCorrect,
+     response_time_seconds: timeSpent
+   }]);
+ } catch(err) {
+   console.error("Failed to sync answer:", err);
+ }
+}
+
+function handleTimeUp(){
+ if(!session || session.checked)return;
+ const q=session.current;session.checked=true;
+ const st=session.skillStats[q.skill_code] || {attempts:0,correct:0,wrong:0};
+ st.attempts++;st.wrong++;session.streak=0;
+ 
+ const answerRecord={id:q.id,skill:q.skill,question:q.question,selected:null,answerText:"انتهى الوقت دون إجابة",correct:false,correctText:q.options[q.correct_answer]};
+ session.answers.push(answerRecord);
+ recordAnswerToCloud(q, null, false, 60);
+
+ [...$("answers").children].forEach(b=>{b.disabled=true;if(b.textContent.includes(q.options[q.correct_answer]))b.classList.add("correct");});
+ $("feedback").className="feedback bad";
+ $("feedback").innerHTML=`<h3>انتهى الوقت!</h3><p><strong>الإجابة الصحيحة:</strong> ${escapeHTML(q.options[q.correct_answer])}</p><div>${escapeHTML(q.solution_steps)}</div>`;
+ $("feedback").classList.remove("hidden");$("checkBtn").classList.add("hidden");$("nextBtn").classList.remove("hidden");
+ updateStats();
+}
+
+function selectAnswer(key){
+ if(session.checked)return;
+ session.selected=key;
+ [...$("answers").children].forEach((b,i)=>{b.classList.toggle("selected",Object.keys(session.current.options)[i]===key);});
+ $("checkBtn").disabled=false;
+}
+
+function checkAnswer(){
+ if(!session.selected || session.checked)return;
+ stopQuestionTimer();
+ const q=session.current, correct=session.selected===q.correct_answer;
+ session.checked=true;
+ const st=session.skillStats[q.skill_code] || {attempts:0,correct:0,wrong:0};
+ st.attempts++; if(correct){st.correct++;session.correct++;session.streak++;}else{st.wrong++;session.streak=0;}
+ 
+ const answerRecord={id:q.id,skill:q.skill,question:q.question,selected:session.selected,answerText:q.options[session.selected],correct,correctText:q.options[q.correct_answer]};
+ session.answers.push(answerRecord);
+ recordAnswerToCloud(q, session.selected, correct, 60 - questionSecondsLeft);
+
+ [...$("answers").children].forEach((b,i)=>{
+    const key=Object.keys(q.options)[i];
+    b.disabled=true;
+    if(key===q.correct_answer)b.classList.add("correct");
+    if(key===session.selected&&!correct)b.classList.add("wrong");
+ });
+ $("feedback").className="feedback "+(correct?"good":"bad");
+ $("feedback").innerHTML=`<h3>${correct?"أحسنتِ! إجابة صحيحة":"توضيح طريقة الحل"}</h3><div>${escapeHTML(q.solution_steps)}</div>`;
+ $("feedback").classList.remove("hidden");
+ $("checkBtn").classList.add("hidden");$("nextBtn").classList.remove("hidden");
+ $("scoreLabel").textContent=`الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+ updateStats();
+}
+
+function nextQuestion(){
+ if(!session.checked)return;
+ session.index++;
+ renderQuestion();
+}
+
+function updateStats(){
+ $("statAnswered").textContent=arabicDigits(session.answers.length);
+ $("statAccuracy").textContent=session.answers.length?Math.round(session.correct/session.answers.length*100)+"%":"—";
+ $("statStreak").textContent=arabicDigits(session.streak);
+}
+
+// 4. حفظ النتائج في Supabase عند النهاية
+async function showResults(){
+ stopQuestionTimer();
+ const total=session.answers.length, acc=total?Math.round(session.correct/total*100):0;
+ 
+ if(currentAttemptId) {
+   try {
+     await supabaseClient.from('attempts').update({
+       end_time: new Date().toISOString(),
+       total_score: acc,
+       correct_count: session.correct,
+       incorrect_count: total - session.correct,
+       is_completed: true
+     }).eq('id', currentAttemptId);
+   } catch(e) {
+     console.error("Failed to update final attempt in cloud:", e);
+   }
+ }
+
+ $("quiz").classList.add("hidden");$("results").classList.remove("hidden");
+ $("finalCorrect").textContent=session.correct+"/"+total;$("finalAccuracy").textContent=acc+"%";
+ $("resultMessage").textContent=acc>=80?"أداء رائع ونتيجة ممتازة! تم حفظ إنجازكِ سحابياً بنجاح.":"كل محاولة فرصة جديدة للتعلم. تم حفظ نتائجكِ لمتابعة المعلمة.";
+ 
+ $("skillReport").innerHTML="";
+ Object.entries(skillNames).forEach(([code,name])=>{
+  const s=session.skillStats[code]||{attempts:0,correct:0};const pct=s.attempts?Math.round(s.correct/s.attempts*100):0;
+  const div=document.createElement("div");div.className="skill-row";
+  div.innerHTML=`<div class="small">${name}</div><div class="bar"><span style="width:${pct}%"></span></div><div class="small">${s.attempts?pct+"%":"—"}</div>`;
+  $("skillReport").appendChild(div);
+ });
+
+ $("answerSummary").innerHTML="";
+ session.answers.forEach((a,i)=>{
+  const tr=document.createElement("tr");
+  [String(i+1),a.skill,a.answerText,(a.correct?"صحيحة":"تحتاج مراجعة")].forEach((v,j)=>{const td=document.createElement("td");td.textContent=v;if(j===3)td.style.color=a.correct?"#087f5b":"#b45309";tr.appendChild(td);});
+  $("answerSummary").appendChild(tr);
+ });
+ $("progressBar").style.width="100%";
+}
+
+function escapeHTML(str){return String(str).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+// 5. لوحة المعلمة السحابية
+async function showTeacherDashboard(){
+ $("home").classList.add("hidden");$("quiz").classList.add("hidden");$("results").classList.add("hidden");$("teacherDashboard").classList.remove("hidden");
+ 
+ try {
+   const { data: students } = await supabaseClient.from('students').select('*');
+   const { data: attempts } = await supabaseClient.from('attempts').select('*').eq('is_completed', true);
+
+   const totalStudents = students ? students.length : 0;
+   const totalAttempts = attempts ? attempts.length : 0;
+   
+   let avgAccuracy = 0;
+   if(totalAttempts > 0) {
+      const sum = attempts.reduce((acc, curr) => acc + (curr.total_score || 0), 0);
+      avgAccuracy = Math.round(sum / totalAttempts);
+   }
+
+   $("dbStudents").textContent = totalStudents;
+   $("dbSessions").textContent = totalAttempts;
+   $("dbAccuracy").textContent = avgAccuracy + "%";
+
+   const tbody = $("studentsTable"); tbody.innerHTML = "";
+   if(students) {
+     students.forEach(st => {
+       const tr = document.createElement("tr");
+       const stAttempts = attempts ? attempts.filter(a => a.student_id === st.id) : [];
+       const stAvg = stAttempts.length ? Math.round(stAttempts.reduce((a,b)=>a+(b.total_score||0),0)/stAttempts.length) : 0;
+       
+       [st.full_name, st.section || "4/1", String(stAttempts.length), stAttempts.length ? stAvg + "%" : "لا توجد محاولات", stAvg>=80?"متقنة":(stAvg>=60?"في طور الإتقان":"تحتاج دعم"), new Date(st.created_at).toLocaleDateString('ar-BH')].forEach(v => {
+         const td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+       });
+       tbody.appendChild(tr);
+     });
+   }
+ } catch(err) {
+   console.error("Dashboard error:", err);
+ }
+}
+
+$("startBtn").addEventListener("click",newSession);
+$("howBtn").addEventListener("click",()=>{$("how").classList.remove("hidden");$("home").classList.add("hidden");});
+$("teacherBtn").addEventListener("click",showTeacherDashboard);
+$("backHomeBtn").addEventListener("click",()=>{$("teacherDashboard").classList.add("hidden");$("home").classList.remove("hidden");});
+$("closeHow").addEventListener("click",()=>{$("how").classList.add("hidden");$("home").classList.remove("hidden");});
+$("checkBtn").addEventListener("click",checkAnswer);
+$("nextBtn").addEventListener("click",nextQuestion);
+$("restartBtn").addEventListener("click",()=>{ $("results").classList.add("hidden");$("home").classList.remove("hidden"); });
+
+loadQuestions();
+</script>
+</body>
+</html>
