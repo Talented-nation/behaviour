@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title> TIMSS  الصف الرابع</title>
+<title>تحدّي TIMSS الذكي | الصف الرابع</title>
 <style>
 :root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
 *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
@@ -175,7 +175,8 @@ function newSession(){
 }
 
 function renderQuestion(){
- if(session.index >= session.pool.length || session.index >= 10){ showResults(); return; }
+ // تم تعديل الحد الأقصى هنا ليصبح 30 سؤالاً كاملاً بدلاً من 10
+ if(session.index >= session.pool.length || session.index >= 30){ showResults(); return; }
  const q = session.pool[session.index];
  session.current = q;
  session.selected = null;
@@ -183,9 +184,9 @@ function renderQuestion(){
 
  $("skillPill").textContent = q.skill || "الرياضيات";
  $("difficultyLabel").textContent = "الصعوبة: " + (q.difficulty || 2);
- $("questionCount").textContent = `السؤال ${arabicDigits(session.index + 1)} من ${arabicDigits(Math.min(10, session.pool.length))}`;
+ $("questionCount").textContent = `السؤال ${arabicDigits(session.index + 1)} من ${arabicDigits(Math.min(30, session.pool.length))}`;
  $("scoreLabel").textContent = `الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
- $("progressBar").style.width = (session.index / Math.min(10, session.pool.length) * 100) + "%";
+ $("progressBar").style.width = (session.index / Math.min(30, session.pool.length) * 100) + "%";
  $("questionText").textContent = q.question;
 
  $("answers").innerHTML = "";
@@ -297,7 +298,6 @@ async function showResults(){
  $("finalAccuracy").textContent = acc + "%";
  $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجاتك والمهارات في السحابة." : "أداء جيد، تواصلي التدريب المستمر.";
 
- // استخدام URLSearchParams لإرسال البيانات بالصيغة التوافقية المضمونة لجوجل
  const payload = new URLSearchParams({
    studentName: session.name,
    section: session.cls,
@@ -333,7 +333,7 @@ async function showTeacherDashboard(){
      let totalAcc = 0;
      data.forEach(row => {
        let score = Number(row.score) || 0;
-       let total = Number(row.total) || 10;
+       let total = Number(row.total) || 30;
        totalAcc += (score / total);
      });
      $("dbAccuracy").textContent = Math.round((totalAcc / data.length) * 100) + "%";
@@ -348,14 +348,14 @@ async function showTeacherDashboard(){
    data.reverse().forEach(row => {
      const tr = document.createElement("tr");
      const score = Number(row.score) || 0;
-     const total = Number(row.total) || 10;
+     const total = Number(row.total) || 30;
      const pct = Math.round((score / total) * 100);
      const lvl = pct >= 80 ? "متقنة" : (pct >= 60 ? "في طور الإتقان" : "تحتاج دعم");
      const cls = pct >= 80 ? "level-mastered" : (pct >= 60 ? "level-developing" : "level-support");
      const unmasteredText = row.unmasteredSkills || "لا يوجد (متقنة)";
 
      [row.studentName || "غير محدد", row.section || "4/1", score + "/" + total, pct + "%", lvl, unmasteredText, new Date(row.timestamp).toLocaleString('ar-BH')].forEach((val, idx)=>{
-       const td = document.append ? document.createElement("td") : document.createElement("td");
+       const td = document.createElement("td");
        if(idx === 4){
          const badge = document.createElement("span");
          badge.className = "level " + cls;
@@ -380,7 +380,7 @@ $("checkBtn").addEventListener("click", checkAnswer);
 $("nextBtn").addEventListener("click", nextQuestion);
 $("restartBtn").addEventListener("click", ()=> { $("results").classList.add("hidden"); $("home").classList.remove("hidden"); });
 $("closeHow").addEventListener("click", ()=> { $("how").classList.add("hidden"); $("home").classList.remove("hidden"); });
-$("howBtn").addEventListener("click", ()=> { $("how").classList.remove("hidden"); $("home").classList.add("hidden"); });
+$("howBtn").addEventListener("click", ()=> { $("how").classList.add("hidden"); $("home").classList.remove("hidden"); });
 
 loadQuestions();
 </script>
