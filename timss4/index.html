@@ -46,8 +46,7 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
  <div>
   <span class="pill">منصة سحابية متكاملة</span>
   <h2 style="margin-top:12px;font-size:1.65rem">هل أنتِ مستعدة لتحدّي الرياضيات؟</h2>
-  <p>أجيبي عن الأسئلة، واكتشفي مهاراتك، وحفظي نتائجك مباشرة في لوحة المعلمة السحابية.</p>
-  <ul class="small muted"><li>أسئلة شاملة من ملف الخادم المحلي (JSON).</li><li>تغذية راجعة فورية وتوضيح لخطوات الحل.</li><li>حفظ تلقائي للمحاولات في قاعدة البيانات المركزية.</li></ul>
+  <p>أجيبي عن الأسئلة، واكتشفي مهاراتك، وتتبعي نتائجكِ مع معلمتكِ عبر السحابة.</p>
   <div class="card" style="padding:14px;margin-top:16px;box-shadow:none;background:#f8fbfd">
   <h3>دخول الطالبة</h3>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
@@ -55,7 +54,7 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
    <label>الصف / الشعبة<input id="className" maxlength="40" placeholder="مثال: 4/1" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
   </div>
   <p class="small muted">تُحفظ النتائج بشكل آمن ومباشر في السحابة.</p>
-  <div class="actions"><button class="primary" id="startBtn" disabled>جارٍ تحميل الأسئلة…</button><span id="questionLoadStatus" class="small muted" role="status">يتم جلب ملف الأسئلة...</span><button class="outline" id="howBtn">كيف تعمل اللعبة؟</button><button class="secondary" id="teacherBtn">لوحة المعلمة</button></div>
+  <div class="actions"><button class="primary" id="startBtn" disabled>جارٍ تحميل الأسئلة…</button><span id="questionLoadStatus" class="small muted" role="status">يتم جلب ملف الأسئلة...</span><button class="outline" id="howBtn">كيف تعمل اللعبة؟</button><button class="secondary" id="teacherBtn">لوحة المعلمة المركزية</button></div>
  </div>
  </div>
  <div class="hero-visual"><div><div class="big-number">123 × 4</div><strong>فكّري، جرّبي، وتعلّمي!</strong><div class="muted small">كل سؤال يقربك من الإتقان</div></div></div>
@@ -88,13 +87,11 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
  </div>
 </section>
 <section id="teacherDashboard" class="hidden">
- <div class="card"><div class="topline"><div><span class="pill">لوحة سحابية مركزية</span><h2 style="margin-top:8px">لوحة متابعة المعلمات المشتركة</h2></div><button class="outline" id="backHomeBtn">العودة للرئيسية</button></div>
- <p class="muted small">تعرض هذه اللوحة نتائج جميع الطالبات المسجلات عبر قاعدة البيانات السحابية.</p>
+ <div class="card"><div class="topline"><div><span class="pill">لوحة سحابية مركزية</span><h2 style="margin-top:8px">لوحة متابعة المعلمات المشتركة (Supabase)</h2></div><button class="outline" id="backHomeBtn">العودة للرئيسية</button></div>
+ <p class="muted small">تعرض هذه اللوحة نتائج جميع الطالبات المسجلات سحابياً عبر كل الأجهزة.</p>
  <div class="stats"><div class="stat"><strong id="dbStudents">0</strong><span class="small muted">طالبات مسجلات</span></div><div class="stat"><strong id="dbSessions">0</strong><span class="small muted">محاولات مكتملة</span></div><div class="stat"><strong id="dbAccuracy">—</strong><span class="small muted">الدقة العامة</span></div></div>
  </div>
- <div class="card"><h2>تصنيف مستويات الإتقان</h2><div class="stats"><div class="stat"><strong id="levelMastered">0</strong><span class="small muted">متقنات (80% فأعلى)</span></div><div class="stat"><strong id="levelDeveloping">0</strong><span class="small muted">في طور الإتقان (60–79%)</span></div><div class="stat"><strong id="levelSupport">0</strong><span class="small muted">يحتجن إلى دعم (أقل من 60%)</span></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>مستوى الإتقان</th><th>متوسط الإتقان</th><th>عدد المحاولات</th></tr></thead><tbody id="masteryTable"></tbody></table></div></div>
- <div class="card"><h2>قائمة الطالبات اللاتي يحتجن إلى دعم</h2><div class="table-wrap"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>المهارة ذات الأولوية</th><th>الإجراء المقترح</th></tr></thead><tbody id="atRiskTable"></tbody></table></div></div>
- <div class="card"><h2>ملخص جميع الطالبات</h2><div class="table-wrap"><table><thead><tr><th>الطالبة</th><th>الصف/الشعبة</th><th>المحاولات</th><th>الدقة</th><th>مستوى الإتقان</th><th>تاريخ التسجيل</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+ <div class="card"><h2>سجل الطالبات والمحاولات السحابية</h2><div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الصف/الشعبة</th><th>عدد المحاولات</th><th>متوسط الدقة</th><th>مستوى الإتقان</th><th>تاريخ التسجيل</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
 </section>
 <section id="results" class="hidden">
  <div class="card">
@@ -110,7 +107,7 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
 <footer>منصة تحدّي الرياضيات TIMSS · متصلة بقاعدة البيانات السحابية Supabase · مملكة البحرين</footer>
 
 <script>
-// 1. تهيئة الاتصال السحابي بـ Supabase
+// 1. الاتصال السحابي بـ Supabase
 const SUPABASE_URL = 'https://tgfbemojxbnuipfibpz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnZmJlbW9qeGJudWlwZmJpYnB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzQzMjksImV4cCI6MjEwODQxMDMyOX0.SueRv_tavlqMvgSknHufgERmruKmrcugzQ_GJhVUOBk';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -128,94 +125,84 @@ const skillNames = {
 };
 
 const $ = id => document.getElementById(id);
-const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥٦ realm'[Number(d)] || d);
 
-// 2. تحميل الأسئلة من ملف questions.json الخارجي
+// 2. قراءة الأسئلة من JSON
 async function loadQuestions(){
  try{
   const response = await fetch('questions.json');
   if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة الخارجي');
-  const data = await response.json();
-  
-  QUESTIONS = data.map(q => ({
-     id: q.id,
-     question: q.question,
-     options: q.options,
-     correct_answer: q.correct_answer,
-     skill: q.skill,
-     skill_code: q.skill_code || 'N3',
-     difficulty: q.difficulty || 2,
-     cognitive_domain: q.cognitive_domain || 'التطبيق',
-     solution_steps: q.solution_steps || '',
-     hint: q.hint || 'فكري في خطوات الحل بعناية.'
-  }));
-
+  QUESTIONS = await response.json();
   questionsReady = true;
   $('startBtn').disabled = false;
   $('startBtn').textContent = 'ابدئي التحدّي';
-  $('questionLoadStatus').textContent = `تم تحميل ${arabicDigits(QUESTIONS.length)} سؤالًا بنجاح من الخادم.`;
+  $('questionLoadStatus').textContent = `تم تحميل ${QUESTIONS.length} سؤالًا بنجاح.`;
  }catch(error){
   console.error('Question loading failed:', error);
   $('startBtn').disabled = true;
   $('startBtn').textContent = 'تعذّر تحميل الأسئلة';
-  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json في نفس المجلد.';
+  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json.';
  }
 }
 
 let session = null;
 function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
-// 3. بدء الجلسة والتحقق من الطالبة بالاسم والشعبة فقط وحفظ المحاولة في Supabase
+// 3. التسجيل السحابي الآمن (توليد رمز تلقائي خلف الكواليس لتفادي خطأ الداتابيز)
 async function newSession(){
  if(!questionsReady){alert("يرجى الانتظار حتى يتم تحميل الأسئلة.");return;}
- const name=$("studentName").value.trim(), cls=$("className").value.trim();
- if(!name){alert("يرجى إدخال اسم الطالبة قبل البدء.");$("studentName").focus();return;}
+ const name=$("studentName").value.trim(), cls=$("className").value.trim() || '4/1';
+ if(!name){alert("يرجى إدخال اسم الطالبة أولاً.");$("studentName").focus();return;}
 
  $('startBtn').disabled = true;
- $('startBtn').textContent = 'جارٍ تسجيل الدخول سحابياً...';
+ $('startBtn').textContent = 'جارٍ الاتصال بالسحابة...';
 
  try {
-   // التحقق من وجود الطالبة بالاسم والشعبة في قاعدة البيانات أو إنشاؤها تلقائياً
-   let { data: student, error: stErr } = await supabaseClient
+   // البحث عن الطالبة
+   let { data: student } = await supabaseClient
      .from('students')
      .select('*')
      .eq('full_name', name)
-     .eq('section', cls || '4/1')
+     .eq('section', cls)
      .maybeSingle();
 
+   // إنشاء حساب طالبة جديد برمز توليدي تلقائي إن لم تكن مسجلة
    if (!student) {
+     const autoCode = "STU-" + Math.floor(100000 + Math.random() * 900000);
      const { data: newSt, error: createErr } = await supabaseClient
        .from('students')
-       .insert([{ full_name: name, section: cls || '4/1', student_code: 'AUTO_' + Math.random().toString(36).slice(2,7) }])
+       .insert([{ full_name: name, section: cls, student_code: autoCode }])
        .select()
        .single();
-     if(createErr) throw createErr;
+     
+     if (createErr) throw createErr;
      student = newSt;
    }
    currentDbStudentId = student.id;
 
+   // بدء محاولة جديدة في قاعدة البيانات
    const { data: attempt, error: attErr } = await supabaseClient
      .from('attempts')
      .insert([{ student_id: currentDbStudentId, start_time: new Date().toISOString() }])
      .select()
      .single();
    
-   if(attErr) throw attErr;
+   if (attErr) throw attErr;
    currentAttemptId = attempt.id;
 
  } catch(e) {
    console.error('Database connection error:', e);
-   alert('تعذر الاتصال بقاعدة البيانات السحابية لحفظ النتائج. تأكدي من الاتصال بالشبكة.');
+   alert('حدث خطأ في الاتصال بالسحابة: ' + (e.message || 'تأكدي من الاتصال بإنترنت المدرسة'));
    $('startBtn').disabled = false;
    $('startBtn').textContent = 'ابدئي التحدّي';
    return;
  }
 
  const pool = shuffle(QUESTIONS);
- session = {pool, index:0, answers:[], correct:0, hints:0, streak:0, skillStats:{}, selected:null, checked:false, seen:new Set(), current:null, startedAt:new Date().toISOString()};
+ session = {pool, index:0, answers:[], correct:0, hints:0, streak:0, skillStats:{}, selected:null, checked:false, seen:new Set(), current:null};
  Object.keys(skillNames).forEach(k=>session.skillStats[k]={attempts:0,correct:0,wrong:0,streak:0});
  
- $("home").classList.add("hidden"); $("how").classList.add("hidden"); $("results").classList.add("hidden"); $("teacherDashboard").classList.add("hidden"); $("quiz").classList.remove("hidden");
+ $("home").classList.add("hidden"); $("quiz").classList.remove("hidden");
  renderQuestion();
 }
 
@@ -230,9 +217,9 @@ function renderQuestion(){
  if(!q || session.index>=session.pool.length){showResults();return;}
  session.current=q;session.selected=null;session.checked=false;session.seen.add(q.id);
  $("skillPill").textContent=q.skill;
- $("difficultyLabel").textContent="الصعوبة: "+(["","سهل","متوسط","صعب"][q.difficulty])+" · "+q.cognitive_domain;
- $("questionCount").textContent=`السؤال ${arabicDigits(session.index+1)} من ${arabicDigits(session.pool.length)}`;
- $("scoreLabel").textContent=`الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+ $("difficultyLabel").textContent="الصعوبة: "+(["","سهل","متوسط","صعب"][q.difficulty || 2]);
+ $("questionCount").textContent=`السؤال ${session.index+1} من ${session.pool.length}`;
+ $("scoreLabel").textContent=`الإجابات الصحيحة: ${session.correct}`;
  $("progressBar").style.width=(session.index/session.pool.length*100)+"%";
  $("questionText").textContent=q.question;
  $("answers").innerHTML="";
@@ -240,7 +227,7 @@ function renderQuestion(){
   const b=document.createElement("button");b.className="answer";b.textContent=`${({A:"أ",B:"ب",C:"ج",D:"د"})[key]}. ${val}`;
   b.addEventListener("click",()=>selectAnswer(key));$("answers").appendChild(b);
  });
- $("feedback").classList.add("hidden");$("hintBox").classList.add("hidden");
+ $("feedback").classList.add("hidden");
  $("checkBtn").classList.remove("hidden");$("checkBtn").disabled=true;$("nextBtn").classList.add("hidden");
  updateStats();
  startQuestionTimer();
@@ -262,40 +249,17 @@ function stopQuestionTimer(){if(questionTimerInterval!==null){clearInterval(ques
 
 function updateTimerDisplay(){
  const seconds=Math.max(0,questionSecondsLeft),mins=Math.floor(seconds/60),secs=seconds%60;
- const timeText=String(mins).padStart(2,"0")+":"+String(secs).padStart(2,"0");
- $("timerText").textContent=arabicDigits(timeText);
+ $("timerText").textContent=String(mins).padStart(2,"0")+":"+String(secs).padStart(2,"0");
  $("timebar").style.width=(seconds/60*100)+"%";
- $("timebar").classList.toggle("warning",seconds<=30&&seconds>10);
- $("timebar").classList.toggle("danger",seconds<=10);
-}
-
-async function recordAnswerToCloud(q, selectedOption, isCorrect, timeSpent){
- if(!currentAttemptId) return;
- try {
-   await supabaseClient.from('attempt_answers').insert([{
-     attempt_id: currentAttemptId,
-     selected_option: selectedOption,
-     is_correct: isCorrect,
-     response_time_seconds: timeSpent
-   }]);
- } catch(err) {
-   console.error("Failed to sync answer:", err);
- }
 }
 
 function handleTimeUp(){
  if(!session || session.checked)return;
  const q=session.current;session.checked=true;
- const st=session.skillStats[q.skill_code] || {attempts:0,correct:0,wrong:0};
- st.attempts++;st.wrong++;session.streak=0;
- 
- const answerRecord={id:q.id,skill:q.skill,question:q.question,selected:null,answerText:"انتهى الوقت دون إجابة",correct:false,correctText:q.options[q.correct_answer]};
- session.answers.push(answerRecord);
- recordAnswerToCloud(q, null, false, 60);
-
+ session.answers.push({id:q.id,correct:false});
  [...$("answers").children].forEach(b=>{b.disabled=true;if(b.textContent.includes(q.options[q.correct_answer]))b.classList.add("correct");});
  $("feedback").className="feedback bad";
- $("feedback").innerHTML=`<h3>انتهى الوقت!</h3><p><strong>الإجابة الصحيحة:</strong> ${escapeHTML(q.options[q.correct_answer])}</p><div>${escapeHTML(q.solution_steps)}</div>`;
+ $("feedback").innerHTML=`<h3>انتهى الوقت!</h3><div>${q.solution_steps || ''}</div>`;
  $("feedback").classList.remove("hidden");$("checkBtn").classList.add("hidden");$("nextBtn").classList.remove("hidden");
  updateStats();
 }
@@ -312,12 +276,8 @@ function checkAnswer(){
  stopQuestionTimer();
  const q=session.current, correct=session.selected===q.correct_answer;
  session.checked=true;
- const st=session.skillStats[q.skill_code] || {attempts:0,correct:0,wrong:0};
- st.attempts++; if(correct){st.correct++;session.correct++;session.streak++;}else{st.wrong++;session.streak=0;}
- 
- const answerRecord={id:q.id,skill:q.skill,question:q.question,selected:session.selected,answerText:q.options[session.selected],correct,correctText:q.options[q.correct_answer]};
- session.answers.push(answerRecord);
- recordAnswerToCloud(q, session.selected, correct, 60 - questionSecondsLeft);
+ if(correct) session.correct++;
+ session.answers.push({id:q.id,correct});
 
  [...$("answers").children].forEach((b,i)=>{
     const key=Object.keys(q.options)[i];
@@ -326,26 +286,20 @@ function checkAnswer(){
     if(key===session.selected&&!correct)b.classList.add("wrong");
  });
  $("feedback").className="feedback "+(correct?"good":"bad");
- $("feedback").innerHTML=`<h3>${correct?"أحسنتِ! إجابة صحيحة":"توضيح طريقة الحل"}</h3><div>${escapeHTML(q.solution_steps)}</div>`;
+ $("feedback").innerHTML=`<h3>${correct?"أحسنتِ! إجابة صحيحة":"طريقة الحل"}</h3><div>${q.solution_steps || ''}</div>`;
  $("feedback").classList.remove("hidden");
  $("checkBtn").classList.add("hidden");$("nextBtn").classList.remove("hidden");
- $("scoreLabel").textContent=`الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+ $("scoreLabel").textContent=`الإجابات الصحيحة: ${session.correct}`;
  updateStats();
 }
 
-function nextQuestion(){
- if(!session.checked)return;
- session.index++;
- renderQuestion();
-}
-
+function nextQuestion(){ session.index++; renderQuestion(); }
 function updateStats(){
- $("statAnswered").textContent=arabicDigits(session.answers.length);
+ $("statAnswered").textContent=session.answers.length;
  $("statAccuracy").textContent=session.answers.length?Math.round(session.correct/session.answers.length*100)+"%":"—";
- $("statStreak").textContent=arabicDigits(session.streak);
 }
 
-// 4. حفظ النتائج في Supabase عند النهاية
+// 4. إنهاء ونقل الدرجات إلى Supabase
 async function showResults(){
  stopQuestionTimer();
  const total=session.answers.length, acc=total?Math.round(session.correct/total*100):0;
@@ -360,53 +314,28 @@ async function showResults(){
        is_completed: true
      }).eq('id', currentAttemptId);
    } catch(e) {
-     console.error("Failed to update final attempt in cloud:", e);
+     console.error("Cloud update error:", e);
    }
  }
 
  $("quiz").classList.add("hidden");$("results").classList.remove("hidden");
  $("finalCorrect").textContent=session.correct+"/"+total;$("finalAccuracy").textContent=acc+"%";
- $("resultMessage").textContent=acc>=80?"أداء رائع ونتيجة ممتازة! تم حفظ إنجازكِ سحابياً بنجاح.":"كل محاولة فرصة جديدة للتعلم. تم حفظ نتائجكِ لمتابعة المعلمة.";
- 
- $("skillReport").innerHTML="";
- Object.entries(skillNames).forEach(([code,name])=>{
-  const s=session.skillStats[code]||{attempts:0,correct:0};const pct=s.attempts?Math.round(s.correct/s.attempts*100):0;
-  const div=document.createElement("div");div.className="skill-row";
-  div.innerHTML=`<div class="small">${name}</div><div class="bar"><span style="width:${pct}%"></span></div><div class="small">${s.attempts?pct+"%":"—"}</div>`;
-  $("skillReport").appendChild(div);
- });
-
- $("answerSummary").innerHTML="";
- session.answers.forEach((a,i)=>{
-  const tr=document.createElement("tr");
-  [String(i+1),a.skill,a.answerText,(a.correct?"صحيحة":"تحتاج مراجعة")].forEach((v,j)=>{const td=document.createElement("td");td.textContent=v;if(j===3)td.style.color=a.correct?"#087f5b":"#b45309";tr.appendChild(td);});
-  $("answerSummary").appendChild(tr);
- });
- $("progressBar").style.width="100%";
 }
 
-function escapeHTML(str){return String(str).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-
-// 5. لوحة المعلمة السحابية
+// 5. لوحة المعلمة السحابية المشتركة
 async function showTeacherDashboard(){
- $("home").classList.add("hidden");$("quiz").classList.add("hidden");$("results").classList.add("hidden");$("teacherDashboard").classList.remove("hidden");
- 
+ $("home").classList.add("hidden");$("teacherDashboard").classList.remove("hidden");
  try {
    const { data: students } = await supabaseClient.from('students').select('*');
    const { data: attempts } = await supabaseClient.from('attempts').select('*').eq('is_completed', true);
 
-   const totalStudents = students ? students.length : 0;
-   const totalAttempts = attempts ? attempts.length : 0;
+   $("dbStudents").textContent = students ? students.length : 0;
+   $("dbSessions").textContent = attempts ? attempts.length : 0;
    
-   let avgAccuracy = 0;
-   if(totalAttempts > 0) {
+   if(attempts && attempts.length > 0) {
       const sum = attempts.reduce((acc, curr) => acc + (curr.total_score || 0), 0);
-      avgAccuracy = Math.round(sum / totalAttempts);
+      $("dbAccuracy").textContent = Math.round(sum / attempts.length) + "%";
    }
-
-   $("dbStudents").textContent = totalStudents;
-   $("dbSessions").textContent = totalAttempts;
-   $("dbAccuracy").textContent = avgAccuracy + "%";
 
    const tbody = $("studentsTable"); tbody.innerHTML = "";
    if(students) {
@@ -427,10 +356,8 @@ async function showTeacherDashboard(){
 }
 
 $("startBtn").addEventListener("click",newSession);
-$("howBtn").addEventListener("click",()=>{$("how").classList.remove("hidden");$("home").classList.add("hidden");});
 $("teacherBtn").addEventListener("click",showTeacherDashboard);
 $("backHomeBtn").addEventListener("click",()=>{$("teacherDashboard").classList.add("hidden");$("home").classList.remove("hidden");});
-$("closeHow").addEventListener("click",()=>{$("how").classList.add("hidden");$("home").classList.remove("hidden");});
 $("checkBtn").addEventListener("click",checkAnswer);
 $("nextBtn").addEventListener("click",nextQuestion);
 $("restartBtn").addEventListener("click",()=>{ $("results").classList.add("hidden");$("home").classList.remove("hidden"); });
