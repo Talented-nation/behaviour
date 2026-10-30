@@ -7,7 +7,7 @@
 <style>
 :root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
 *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
-button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
 .primary{background:var(--teal);color:#fff}.secondary{background:#e7edf4;color:var(--navy)}.outline{background:#fff;border:1px solid #d5dee8;color:var(--navy)}button:disabled{opacity:.5;cursor:not-allowed}
 header{background:linear-gradient(120deg,#16324f,#0f8b8d);color:#fff;padding:20px 18px}
 .wrap{max-width:1000px;margin:auto;padding:20px 16px}
@@ -53,7 +53,7 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
   <div class="card" style="padding:14px;margin-top:16px;box-shadow:none;background:#f8fbfd">
   <h3>دخول الطالبة</h3>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
-   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="اكتب الاسم هنا" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
+   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="مثال: سارة أحمد" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
    <label>الصف / الشعبة
     <select id="className" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px;background:#fff">
      <option value="رابع 1">رابع 1</option>
@@ -181,22 +181,21 @@ function renderQuestion(){
  answersContainer.innerHTML = "";
 
  if(q.is_text_input) {
-   answersContainer.style.gridTemplateColumns = "repeat(2, minmax(0, 320px))";
-   answersContainer.style.justifyContent = "start";
+   // جعل حاوية الإجابة تأخذ العرض بالكامل لتوفير مساحة واسعة للمربع الطويل
+   answersContainer.style.gridTemplateColumns = "1fr";
    
-   for(let i = 0; i < (q.inputs_count || 2); i++) {
-     const input = document.createElement("input");
-     input.type = "text";
-     input.className = "answer-input";
-     input.placeholder = `الإجابة ${arabicDigits(i + 1)}`;
-     input.style.cssText = "width:100%; padding:14px; border:2px solid #dbe4ec; border-radius:13px; font-size:1.3rem; font-weight:bold; outline:none; background:#fff; text-align:right;";
-     input.addEventListener("input", checkTextInputReady);
-     answersContainer.appendChild(input);
+   for(let i = 0; i < (q.inputs_count || 1); i++) {
+     const textarea = document.createElement("textarea");
+     textarea.className = "answer-textarea";
+     textarea.placeholder = `اكتبي تفسيرك وإجابتك المفصلة هنا...`;
+     // تنسيق مربع نصي طويل وكبير ومريح للكتابة والاستدلال
+     textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
+     textarea.addEventListener("input", checkTextInputReady);
+     answersContainer.appendChild(textarea);
    }
  } else {
    answersContainer.style.gridTemplateColumns = "1fr 1fr";
    
-   // خلط الخيارات عشوائياً لكل سؤال وفي كل مرة يتم عرضه فيها
    const optionsEntries = Object.entries(q.options);
    session.shuffledOptions = shuffle(optionsEntries);
    
@@ -204,7 +203,7 @@ function renderQuestion(){
     const lettersMap = ["أ", "ب", "ج", "د"];
     const b = document.createElement("button");
     b.className = "answer";
-    b.dataset.origKey = key; // حفظ المفتاح الأصلي الحقيقي للاجابة
+    b.dataset.origKey = key;
     b.textContent = `${lettersMap[index] || (index+1)}. ${val}`;
     b.addEventListener("click", ()=>selectAnswer(key, b));
     answersContainer.appendChild(b);
@@ -219,8 +218,8 @@ function renderQuestion(){
 }
 
 function checkTextInputReady() {
-  const inputs = [...document.querySelectorAll(".answer-input")];
-  const allFilled = inputs.every(input => input.value.trim().length > 0);
+  const textareas = [...document.querySelectorAll(".answer-textarea")];
+  const allFilled = textareas.every(ta => ta.value.trim().length > 0);
   $("checkBtn").disabled = !allFilled;
 }
 
@@ -228,7 +227,6 @@ function selectAnswer(key, buttonElement){
  if(session.checked) return;
  session.selected = key;
  
- // تحديث التصميم البصري للزر المختيار وإزالة التحديد عن البقية
  [...$("answers").children].forEach(b=>{
   b.classList.toggle("selected", b === buttonElement);
  });
@@ -269,18 +267,19 @@ function checkAnswer(){
  let isCorrect = false;
 
  if(q.is_text_input) {
-   const inputs = [...document.querySelectorAll(".answer-input")];
-   const userAnswers = inputs.map(input => input.value.trim());
+   const textareas = [...document.querySelectorAll(".answer-textarea")];
+   const userAnswers = textareas.map(ta => ta.value.trim());
    
    const uniqueAnswers = new Set(userAnswers);
    if(uniqueAnswers.size !== userAnswers.length) {
      isCorrect = false;
    } else {
      const accepted = q.accepted_answers.map(ans => ans.trim());
-     isCorrect = userAnswers.every(ans => accepted.includes(ans));
+     // التحقق من تطابق النص المكتوب مع الإجابات التفسيرية الصحيحة المقبولة
+     isCorrect = userAnswers.every(ans => accepted.some(acc => ans.includes(acc) || acc.includes(ans)));
    }
    
-   inputs.forEach(input => input.disabled = true);
+   textareas.forEach(ta => ta.disabled = true);
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
  } else {
@@ -289,7 +288,6 @@ function checkAnswer(){
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
 
-   // إبراز الإجابة الصحيحة والخاطئة بناءً على المفتاح الأصلي بغض النظر عن مكان الزر العشوائي
    [...$("answers").children].forEach((b)=>{
     b.disabled = true;
     const origKey = b.dataset.origKey;
