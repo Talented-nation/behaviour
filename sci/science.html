@@ -120,7 +120,6 @@ const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥
 
 async function loadQuestions(){
  try{
-  // تم تصحيح اسم الملف ليطابق questions.json الموجود في نفس المجلد
   const response = await fetch('questions.json');
   if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة');
   QUESTIONS = await response.json();
@@ -149,7 +148,8 @@ function newSession(){
    answers: [],
    correct: 0,
    skillWrongCounts: {},
-   current: null
+   current: null,
+   shuffledOptions: []
  };
  $("home").classList.add("hidden"); $("quiz").classList.remove("hidden");
  renderQuestion();
@@ -195,11 +195,18 @@ function renderQuestion(){
    }
  } else {
    answersContainer.style.gridTemplateColumns = "1fr 1fr";
-   Object.entries(q.options).forEach(([key, val])=>{
+   
+   // خلط الخيارات عشوائياً لكل سؤال وفي كل مرة يتم عرضه فيها
+   const optionsEntries = Object.entries(q.options);
+   session.shuffledOptions = shuffle(optionsEntries);
+   
+   session.shuffledOptions.forEach(([key, val], index)=>{
+    const lettersMap = ["أ", "ب", "ج", "د"];
     const b = document.createElement("button");
     b.className = "answer";
-    b.textContent = `${({A:"أ",B:"ب",C:"ج",D:"د"})[key]}. ${val}`;
-    b.addEventListener("click", ()=>selectAnswer(key));
+    b.dataset.origKey = key; // حفظ المفتاح الأصلي الحقيقي للاجابة
+    b.textContent = `${lettersMap[index] || (index+1)}. ${val}`;
+    b.addEventListener("click", ()=>selectAnswer(key, b));
     answersContainer.appendChild(b);
    });
  }
@@ -217,12 +224,13 @@ function checkTextInputReady() {
   $("checkBtn").disabled = !allFilled;
 }
 
-function selectAnswer(key){
+function selectAnswer(key, buttonElement){
  if(session.checked) return;
  session.selected = key;
- [...$("answers").children].forEach((b, i)=>{
-  const currentKey = Object.keys(session.current.options)[i];
-  b.classList.toggle("selected", currentKey === key);
+ 
+ // تحديث التصميم البصري للزر المختيار وإزالة التحديد عن البقية
+ [...$("answers").children].forEach(b=>{
+  b.classList.toggle("selected", b === buttonElement);
  });
  $("checkBtn").disabled = false;
 }
@@ -281,11 +289,16 @@ function checkAnswer(){
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
 
-   [...$("answers").children].forEach((b, i)=>{
-    const key = Object.keys(q.options)[i];
+   // إبراز الإجابة الصحيحة والخاطئة بناءً على المفتاح الأصلي بغض النظر عن مكان الزر العشوائي
+   [...$("answers").children].forEach((b)=>{
     b.disabled = true;
-    if(key === q.correct_answer) b.classList.add("correct");
-    if(key === session.selected && !isCorrect) b.classList.add("wrong");
+    const origKey = b.dataset.origKey;
+    if(origKey === q.correct_answer) {
+      b.classList.add("correct");
+    }
+    if(origKey === session.selected && !isCorrect) {
+      b.classList.add("wrong");
+    }
    });
  }
 
@@ -332,7 +345,7 @@ async function showResults(){
  $("results").classList.remove("hidden");
  $("finalCorrect").textContent = session.correct + "/" + total;
  $("finalAccuracy").textContent = acc + "%";
- $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجتك والمهارات في السحابة." : "أداء جيد، تواصلي التدريب المستمر.";
+ $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجتك والمهارات في السحابة." : "أداء جيد، واصلي التدريب المستمر.";
 
  try {
    await fetch(SCRIPT_URL, {
