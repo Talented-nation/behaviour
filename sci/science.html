@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اختبار TIMSS التجريبي | العلوم - الصف الرابع</title>
+<style>
+:root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
+.primary{background:var(--teal);color:#fff}.secondary{background:#e7edf4;color:var(--navy)}.outline{background:#fff;border:1px solid #d5dee8;color:var(--navy)}button:disabled{opacity:.5;cursor:not-allowed}
+header{background:linear-gradient(120deg,#16324f,#0f8b8d);color:#fff;padding:20px 18px}
+.wrap{max-width:1000px;margin:auto;padding:20px 16px}
+.brand{display:flex;align-items:center;gap:13px}.logo{width:52px;height:52px;border-radius:16px;background:#ffffff20;display:grid;place-items:center;font-size:27px}
+h1{font-size:clamp(1.35rem,3vw,2rem);margin:0}header p{margin:3px 0 0;color:#e2f3f4}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;background:var(--mint);color:#08696a;padding:4px 10px;font-size:.82rem;font-weight:700}
+.card{background:#fff;border:1px solid #e1e8ef;border-radius:20px;padding:clamp(17px,3vw,27px);box-shadow:0 6px 22px #16324f0a;margin-bottom:16px}
+.hero{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;align-items:center}
+.hero-visual{background:linear-gradient(135deg,#e3f8f5,#e9efff);border-radius:18px;min-height:180px;display:grid;place-items:center;text-align:center;padding:20px}
+.big-number{font-size:clamp(2.8rem,8vw,5rem);font-weight:900;color:var(--teal);letter-spacing:2px}
+h2{margin:0 0 10px;font-size:1.35rem;color:var(--navy)}h3{margin:0 0 8px;color:var(--navy)}
+.muted{color:var(--muted)}.small{font-size:.9rem}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+.progress{height:9px;background:#e7edf4;border-radius:999px;overflow:hidden;margin:12px 0}.progress>div{height:100%;background:linear-gradient(90deg,var(--teal),#65c9b8);width:0;transition:width .25s}
+.timer-wrap{margin:12px 0 18px;padding:12px 14px;background:#f8fbfd;border:1px solid #e1e8ef;border-radius:14px}.timer-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-weight:700}.timer-track{height:12px;background:#e7edf4;border-radius:999px;overflow:hidden}.timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#0f8b8d,#65c9b8);border-radius:999px;transition:width 1s linear,background .2s}.timer-fill.warning{background:#f4b942}.timer-fill.danger{background:#b42318}.timer-number{font-variant-numeric:tabular-nums;color:var(--navy)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f7fafc;border-radius:14px;padding:12px;text-align:center}.stat strong{display:block;font-size:1.35rem;color:var(--navy)}
+.question{font-size:1.2rem;font-weight:700;line-height:1.9;margin:18px 0;direction:rtl;text-align:right}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
+.answer{background:#fff;border:2px solid #dbe4ec;text-align:right;direction:rtl;padding:14px;border-radius:13px;color:var(--ink);font-weight:700;font-size:1.1rem;min-height:58px;transition:.2s}
+.answer:hover{border-color:var(--teal);background:#f3fbfa}
+.answer.selected{border-color:var(--teal);background:var(--mint)}
+.answer.correct{border-color:#5bbf97;background:#e8f8ef}
+.answer.wrong{border-color:#e39a91;background:#fff0ee}
+
+.feedback{border-radius:14px;padding:14px;margin-top:15px}.feedback.good{background:#e8f8ef;border:1px solid #b9e6ce}.feedback.bad{background:#fff5e5;border:1px solid #f1d49b}.feedback h3{margin-bottom:4px}
+.hidden{display:none!important}
+footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85rem}
+@media(max-width:750px){.hero{grid-template-columns:1fr}.hero-visual{min-height:120px}.answers{grid-template-columns:1fr}}
+#hintBtn { display: none !important; }
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding-top:0;padding-bottom:0">
+ <div class="brand"><div class="logo">🔬</div><div><h1>اختبار TIMSS التجريبي</h1><p>منصة الاختبار التجريبي لمادة العلوم - الصف الرابع الابتدائي</p></div></div>
+</div></header>
+<main class="wrap">
+<section id="home" class="card hero">
+ <div>
+  <span class="pill">منصة سحابية متكاملة</span>
+  <h2 style="margin-top:12px;font-size:1.65rem">هل أنتِ مستعدة لبدء الاختبار؟</h2>
+  <p>أجيبي عن الأسئلة بعناية، واكتشفي مهاراتك العلمية.</p>
+  <div class="card" style="padding:14px;margin-top:16px;box-shadow:none;background:#f8fbfd">
+  <h3>دخول الطالبة</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="مثال: سارة أحمد" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
+   <label>الصف / الشعبة
+    <select id="className" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px;background:#fff">
+     <option value="رابع 1">رابع 1</option>
+     <option value="رابع 2">رابع 2</option>
+     <option value="رابع 3">رابع 3</option>
+    </select>
+   </label>
+  </div>
+  <p class="small muted" style="margin-top:10px">تُحفظ النتائج بشكل آمن ومباشر في جدول المعلمة المشترك.</p>
+  <div class="actions">
+    <button class="primary" id="startBtn" disabled>جارٍ تحميل الأسئلة…</button>
+    <span id="questionLoadStatus" class="small muted" role="status">يتم جلب ملف الأسئلة...</span>
+  </div>
+ </div>
+ </div>
+ <div class="hero-visual"><div><div class="big-number"><img src="https://talented-nation.github.io/timss2027/timss2027.png" alt="TIMSS 2027" style="max-width:100%;height:auto;max-height:150px;"></div><strong>فكّري، جرّبي، وتعلّمي!</strong><div class="muted small">كل سؤال يقربك من الإتقان</div></div></div>
+</section>
+
+<section id="quiz" class="hidden">
+ <div class="card">
+  <div class="topline"><span id="skillPill" class="pill"></span><span id="difficultyLabel" class="muted small"></span></div>
+  <div class="topline"><span id="questionCount" class="muted small">السؤال ١ من ٣</span><span id="scoreLabel" class="muted small">الإجابات الصحيحة: 0</span></div>
+  <div class="progress"><div id="progressBar"></div></div>
+  <div class="timer-wrap">
+   <div class="timer-top"><span>الوقت المتبقي</span><span id="timerText" class="timer-number">٠١:٠٠</span></div>
+   <div class="timer-track"><div id="timebar" class="timer-fill"></div></div>
+  </div>
+  <div id="questionText" class="question"></div>
+  <div id="answers" class="answers"></div>
+  <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+  <div class="actions">
+   <button id="checkBtn" class="primary" disabled>تحقّقي من الإجابة</button>
+   <button id="nextBtn" class="primary hidden">السؤال التالي</button>
+  </div>
+ </div>
+</section>
+
+<section id="results" class="hidden">
+ <div class="card">
+  <span class="pill">انتهى الاختبار وتم حفظ النتيجة سحابياً</span>
+  <h2 style="margin-top:10px">تقريرك التعليمي</h2>
+  <p id="resultMessage"></p>
+  <div class="stats">
+   <div class="stat"><strong id="finalCorrect">0</strong><span class="small muted">إجابات صحيحة</span></div>
+   <div class="stat"><strong id="finalAccuracy">0%</strong><span class="small muted">الدقة الإجمالية</span></div>
+  </div>
+  <div class="actions" style="margin-top:20px;"><button class="primary" id="restartBtn">إعادة الاختبار</button></div>
+ </div>
+</section>
+</main>
+<footer>منصة الاختبار التجريبي TIMSS</footer>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNebHw-tSbT2yd626Lpwc9jVa6tWumwctQukD9FAA7pn8jtCcqB1BJxlQWVrVS15OK/exec";
+
+let QUESTIONS = [];
+let questionsReady = false;
+let questionTimerInterval = null;
+let questionSecondsLeft = 60;
+let session = null;
+
+const $ = id => document.getElementById(id);
+const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
+
+async function loadQuestions(){
+ try{
+  const response = await fetch('questions.json');
+  if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة');
+  QUESTIONS = await response.json();
+  questionsReady = true;
+  $('startBtn').disabled = false;
+  $('startBtn').textContent = 'ابدئي الاختبار';
+  $('questionLoadStatus').textContent = `تم تحميل ${arabicDigits(QUESTIONS.length)} أسئلة بنجاح.`;
+ }catch(error){
+  $('startBtn').disabled = true;
+  $('startBtn').textContent = 'تعذّر تحميل الأسئلة';
+  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json بجانب الصفحة.';
+ }
+}
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function newSession(){
+ if(!questionsReady){alert("يرجى الانتظار حتى يتم تحميل الأسئلة.");return;}
+ const name=$("studentName").value.trim(), cls=$("className").value;
+ if(!name){alert("يرجى إدخال اسم الطالبة أولاً.");$("studentName").focus();return;}
+
+ session = {
+   name, cls,
+   pool: shuffle(QUESTIONS),
+   index: 0,
+   answers: [],
+   correct: 0,
+   skillWrongCounts: {},
+   current: null
+ };
+ $("home").classList.add("hidden"); $("quiz").classList.remove("hidden");
+ renderQuestion();
+}
+
+function renderQuestion(){
+ if(session.index >= session.pool.length){ showResults(); return; }
+ const q = session.pool[session.index];
+ session.current = q;
+ session.selected = null;
+ session.checked = false;
+
+ $("skillPill").textContent = q.skill || "العلوم";
+ $("difficultyLabel").textContent = "الصعوبة: " + (q.difficulty || 2);
+ $("questionCount").textContent = `السؤال ${arabicDigits(session.index + 1)} من ${arabicDigits(session.pool.length)}`;
+ $("scoreLabel").textContent = `الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+ $("progressBar").style.width = ((session.index / session.pool.length) * 100) + "%";
+ 
+ let htmlContent = "";
+ if(q.image_url) {
+   htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:65%; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
+ }
+ if(q.question && q.question.trim() !== "") {
+   htmlContent += `<div>${q.question.replace(/\n/g, '<br>')}</div>`;
+ }
+ $("questionText").innerHTML = htmlContent;
+
+ const answersContainer = $("answers");
+ answersContainer.innerHTML = "";
+
+ if(q.is_text_input) {
+   answersContainer.style.gridTemplateColumns = "repeat(2, minmax(0, 320px))";
+   answersContainer.style.justifyContent = "start";
+   
+   for(let i = 0; i < (q.inputs_count || 2); i++) {
+     const input = document.createElement("input");
+     input.type = "text";
+     input.className = "answer-input";
+     input.placeholder = `الإجابة ${arabicDigits(i + 1)}`;
+     input.style.cssText = "width:100%; padding:14px; border:2px solid #dbe4ec; border-radius:13px; font-size:1.3rem; font-weight:bold; outline:none; background:#fff; text-align:right;";
+     input.addEventListener("input", checkTextInputReady);
+     answersContainer.appendChild(input);
+   }
+ } else {
+   answersContainer.style.gridTemplateColumns = "1fr 1fr";
+   Object.entries(q.options).forEach(([key, val])=>{
+    const b = document.createElement("button");
+    b.className = "answer";
+    b.textContent = `${({A:"أ",B:"ب",C:"ج",D:"د"})[key]}. ${val}`;
+    b.addEventListener("click", ()=>selectAnswer(key));
+    answersContainer.appendChild(b);
+   });
+ }
+
+ $("feedback").classList.add("hidden");
+ $("checkBtn").classList.remove("hidden"); 
+ $("checkBtn").disabled = true;
+ $("nextBtn").classList.add("hidden");
+ startQuestionTimer();
+}
+
+function checkTextInputReady() {
+  const inputs = [...document.querySelectorAll(".answer-input")];
+  const allFilled = inputs.every(input => input.value.trim().length > 0);
+  $("checkBtn").disabled = !allFilled;
+}
+
+function selectAnswer(key){
+ if(session.checked) return;
+ session.selected = key;
+ [...$("answers").children].forEach((b, i)=>{
+  const currentKey = Object.keys(session.current.options)[i];
+  b.classList.toggle("selected", currentKey === key);
+ });
+ $("checkBtn").disabled = false;
+}
+
+function startQuestionTimer(){
+ if(questionTimerInterval) clearInterval(questionTimerInterval);
+ questionSecondsLeft = 60;
+ updateTimerDisplay();
+ questionTimerInterval = setInterval(()=>{
+  if(!session || session.checked){ clearInterval(questionTimerInterval); return; }
+  questionSecondsLeft--;
+  updateTimerDisplay();
+  if(questionSecondsLeft <= 0){ clearInterval(questionTimerInterval); handleTimeUp(); }
+ }, 1000);
+}
+
+function updateTimerDisplay(){
+ const mins = Math.floor(questionSecondsLeft / 60), secs = questionSecondsLeft % 60;
+ $("timerText").textContent = arabicDigits(String(mins).padStart(2,"0") + ":" + String(secs).padStart(2,"0"));
+ $("timebar").style.width = (questionSecondsLeft / 60 * 100) + "%";
+}
+
+function handleTimeUp(){
+ if(session.checked) return;
+ session.checked = true;
+ recordAnswer(false);
+ finishQuestionStep();
+}
+
+function checkAnswer(){
+ if(session.checked) return;
+ clearInterval(questionTimerInterval);
+ session.checked = true;
+ 
+ const q = session.current;
+ let isCorrect = false;
+
+ if(q.is_text_input) {
+   const inputs = [...document.querySelectorAll(".answer-input")];
+   const userAnswers = inputs.map(input => input.value.trim());
+   
+   const uniqueAnswers = new Set(userAnswers);
+   if(uniqueAnswers.size !== userAnswers.length) {
+     isCorrect = false;
+   } else {
+     const accepted = q.accepted_answers.map(ans => ans.trim());
+     isCorrect = userAnswers.every(ans => accepted.includes(ans));
+   }
+   
+   inputs.forEach(input => input.disabled = true);
+   if(isCorrect) session.correct++;
+   recordAnswer(isCorrect);
+ } else {
+   if(!session.selected) return;
+   isCorrect = session.selected === q.correct_answer;
+   if(isCorrect) session.correct++;
+   recordAnswer(isCorrect);
+
+   [...$("answers").children].forEach((b, i)=>{
+    const key = Object.keys(q.options)[i];
+    b.disabled = true;
+    if(key === q.correct_answer) b.classList.add("correct");
+    if(key === session.selected && !isCorrect) b.classList.add("wrong");
+   });
+ }
+
+ finishQuestionStep();
+}
+
+function recordAnswer(correct){
+ const skill = session.current.skill || "عام";
+ if(!session.skillWrongCounts[skill]) {
+   session.skillWrongCounts[skill] = { total: 0, wrong: 0 };
+ }
+ session.skillWrongCounts[skill].total++;
+ if(!correct) {
+   session.skillWrongCounts[skill].wrong++;
+ }
+ session.answers.push({correct, skill});
+}
+
+function finishQuestionStep(){
+ const isCorrect = session.answers[session.answers.length-1].correct;
+ $("feedback").className = "feedback " + (isCorrect ? "good" : "bad");
+ $("feedback").innerHTML = `<h3>${isCorrect ? "أحسنتِ! إجابة صحيحة" : "توضيح الحل"}</h3><div>${session.current.solution_steps || ''}</div>`;
+ $("feedback").classList.remove("hidden");
+ $("checkBtn").classList.add("hidden");
+ $("nextBtn").classList.remove("hidden");
+ $("scoreLabel").textContent = `الإجابات الصحيحة: ${arabicDigits(session.correct)}`;
+}
+
+function nextQuestion(){ session.index++; renderQuestion(); }
+
+async function showResults(){
+ const total = session.answers.length;
+ const acc = total ? Math.round(session.correct / total * 100) : 0;
+
+ let unmastered = [];
+ Object.entries(session.skillWrongCounts).forEach(([skill, stats])=>{
+   if(stats.wrong > 0 && (stats.wrong / stats.total >= 0.4 || stats.wrong >= 2)){
+     unmastered.push(skill);
+   }
+ });
+ const unmasteredStr = unmastered.length > 0 ? unmastered.join(" ، ") : "لا يوجد (متقنة)";
+
+ $("quiz").classList.add("hidden");
+ $("results").classList.remove("hidden");
+ $("finalCorrect").textContent = session.correct + "/" + total;
+ $("finalAccuracy").textContent = acc + "%";
+ $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجتك والمهارات في السحابة." : "أداء جيد، واصلي التدريب المستمر.";
+
+ const payload = new URLSearchParams({
+   studentName: session.name,
+   section: session.cls,
+   score: session.correct,
+   total: total,
+   unmasteredSkills: unmasteredStr
+ });
+
+ try {
+   await fetch(SCRIPT_URL, {
+     method: "POST",
+     mode: "no-cors",
+     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+     body: payload.toString()
+   });
+ } catch(e) {
+   console.log("Sync error:", e);
+ }
+}
+
+$("startBtn").addEventListener("click", newSession);
+$("checkBtn").addEventListener("click", checkAnswer);
+$("nextBtn").addEventListener("click", nextQuestion);
+$("restartBtn").addEventListener("click", ()=> { $("results").classList.add("hidden"); $("home").classList.remove("hidden"); });
+
+loadQuestions();
+</script>
+</body>
+</html>
