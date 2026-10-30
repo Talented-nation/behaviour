@@ -120,7 +120,8 @@ const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥
 
 async function loadQuestions(){
  try{
-  const response = await fetch('https://talented-nation.github.io/behaviour/sci/questions.json');
+  // تم تصحيح اسم الملف ليطابق questions.json الموجود في نفس المجلد
+  const response = await fetch('questions.json');
   if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة');
   QUESTIONS = await response.json();
   questionsReady = true;
@@ -130,7 +131,7 @@ async function loadQuestions(){
  }catch(error){
   $('startBtn').disabled = true;
   $('startBtn').textContent = 'تعذّر تحميل الأسئلة';
-  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json في المستودع برابط صحيح.';
+  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json بجانب الصفحة.';
  }
 }
 
