@@ -120,7 +120,7 @@ const arabicDigits = value => String(value).replace(/[0-9]/g, d => '٠١٢٣٤٥
 
 async function loadQuestions(){
  try{
-  const response = await fetch('questions.json');
+  const response = await fetch('question.json');
   if(!response.ok) throw new Error('تعذر تحميل ملف الأسئلة');
   QUESTIONS = await response.json();
   questionsReady = true;
@@ -130,7 +130,7 @@ async function loadQuestions(){
  }catch(error){
   $('startBtn').disabled = true;
   $('startBtn').textContent = 'تعذّر تحميل الأسئلة';
-  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف questions.json بجانب الصفحة.';
+  $('questionLoadStatus').textContent = 'تأكدي من وجود ملف question.json بجانب الصفحة.';
  }
 }
 
@@ -333,20 +333,18 @@ async function showResults(){
  $("finalAccuracy").textContent = acc + "%";
  $("resultMessage").textContent = acc >= 80 ? "أداء ممتاز! تم حفظ درجتك والمهارات في السحابة." : "أداء جيد، واصلي التدريب المستمر.";
 
- const payload = new URLSearchParams({
-   studentName: session.name,
-   section: session.cls,
-   score: session.correct,
-   total: total,
-   unmasteredSkills: unmasteredStr
- });
-
  try {
    await fetch(SCRIPT_URL, {
      method: "POST",
      mode: "no-cors",
      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-     body: payload.toString()
+     body: new URLSearchParams({
+       studentName: session.name,
+       section: session.cls,
+       score: session.correct.toString(),
+       total: total.toString(),
+       unmasteredSkills: unmasteredStr
+     })
    });
  } catch(e) {
    console.log("Sync error:", e);
