@@ -53,7 +53,7 @@ footer{text-align:center;color:var(--muted);padding:10px 16px 30px;font-size:.85
   <div class="card" style="padding:14px;margin-top:16px;box-shadow:none;background:#f8fbfd">
   <h3>دخول الطالبة</h3>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
-   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="مثال: سارة أحمد" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
+   <label>اسم الطالبة<input id="studentName" required maxlength="80" placeholder="اكتب الاسم هنا" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px"></label>
    <label>الصف / الشعبة
     <select id="className" style="display:block;width:100%;padding:11px;border:1px solid #ccd8e3;border-radius:10px;margin-top:5px;background:#fff">
      <option value="رابع 1">رابع 1</option>
@@ -187,7 +187,7 @@ function renderQuestion(){
    for(let i = 0; i < (q.inputs_count || 1); i++) {
      const textarea = document.createElement("textarea");
      textarea.className = "answer-textarea";
-     textarea.placeholder = `اكتبي تفسيرك وإجابتك المفصلة هنا...`;
+     textarea.placeholder = `اكتبي تفسيرك هنا...`;
      // تنسيق مربع نصي طويل وكبير ومريح للكتابة والاستدلال
      textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
      textarea.addEventListener("input", checkTextInputReady);
