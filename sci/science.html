@@ -181,20 +181,31 @@ function renderQuestion(){
  answersContainer.innerHTML = "";
 
  if(q.is_text_input) {
-   // جعل حاوية الإجابة تأخذ العرض بالكامل لتوفير مساحة واسعة للمربع الطويل
-   answersContainer.style.gridTemplateColumns = "1fr";
+   const inputsCount = q.inputs_count || 1;
+   const isPic1 = q.image_url && q.image_url.includes("pic1.png");
+
+   if (isPic1 && inputsCount === 2) {
+     answersContainer.style.gridTemplateColumns = "1fr 1fr";
+     answersContainer.style.maxWidth = "65%";
+     answersContainer.style.margin = "15px auto 0 auto";
+   } else {
+     answersContainer.style.gridTemplateColumns = "1fr";
+     answersContainer.style.maxWidth = "100%";
+     answersContainer.style.margin = "15px 0 0 0";
+   }
    
-   for(let i = 0; i < (q.inputs_count || 1); i++) {
+   for(let i = 0; i < inputsCount; i++) {
      const textarea = document.createElement("textarea");
      textarea.className = "answer-textarea";
      textarea.placeholder = `اكتبي تفسيرك هنا...`;
-     // تنسيق مربع نصي طويل وكبير ومريح للكتابة والاستدلال
      textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
      textarea.addEventListener("input", checkTextInputReady);
      answersContainer.appendChild(textarea);
    }
  } else {
    answersContainer.style.gridTemplateColumns = "1fr 1fr";
+   answersContainer.style.maxWidth = "100%";
+   answersContainer.style.margin = "15px 0 0 0";
    
    const optionsEntries = Object.entries(q.options);
    session.shuffledOptions = shuffle(optionsEntries);
