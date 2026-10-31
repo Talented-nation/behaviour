@@ -258,7 +258,7 @@ function renderQuestion(){
    for(let i = 0; i < (q.inputs_count || 1); i++) {
      const textarea = document.createElement("textarea");
      textarea.className = "answer-textarea";
-     textarea.placeholder = `اكتبي تفسيرك هنا...`;
+     textarea.placeholder = `اكتبي اجابتك هنا...`;
      textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
      textarea.addEventListener("input", checkTextInputReady);
      answersContainer.appendChild(textarea);
