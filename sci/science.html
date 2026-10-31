@@ -422,12 +422,19 @@ function checkAnswer(){
    const textareas = [...document.querySelectorAll(".answer-textarea")];
    const userAnswers = textareas.map(ta => ta.value.trim());
    
+   // التحقق من ألا تقل الإجابة عن 3 أحرف لرفض الحروف المفردة مثل "س"
+   const hasValidLength = userAnswers.every(ans => ans.length >= 3);
+   
    const uniqueAnswers = new Set(userAnswers);
-   if(uniqueAnswers.size !== userAnswers.length) {
+   if(!hasValidLength || uniqueAnswers.size !== userAnswers.length) {
      isCorrect = false;
    } else {
      const accepted = q.accepted_answers.map(ans => ans.trim());
-     isCorrect = userAnswers.every(ans => accepted.some(acc => ans.includes(acc) || acc.includes(ans)));
+     // مطابقة الكلمات الكاملة بدلاً من مجرد تطابق جزئي للحروف
+     isCorrect = userAnswers.every(ans => {
+       const words = ans.split(/\s+/);
+       return words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
+     });
    }
    
    textareas.forEach(ta => ta.disabled = true);
