@@ -180,32 +180,91 @@ function renderQuestion(){
  const answersContainer = $("answers");
  answersContainer.innerHTML = "";
 
- if(q.is_text_input) {
-   const inputsCount = q.inputs_count || 1;
-   const isPic1 = q.image_url && q.image_url.includes("pic1.png");
-
-   if (isPic1 && inputsCount === 2) {
-     answersContainer.style.gridTemplateColumns = "1fr 1fr";
-     answersContainer.style.maxWidth = "65%";
-     answersContainer.style.margin = "15px auto 0 auto";
-   } else {
-     answersContainer.style.gridTemplateColumns = "1fr";
-     answersContainer.style.maxWidth = "100%";
-     answersContainer.style.margin = "15px 0 0 0";
-   }
+ if(q.is_drag_drop_table) {
+   answersContainer.style.gridTemplateColumns = "1fr";
    
-   for(let i = 0; i < inputsCount; i++) {
+   const containerDiv = document.createElement("div");
+   containerDiv.style.cssText = "display:flex; flex-direction:column; gap:20px; direction:rtl;";
+   
+   const bankDiv = document.createElement("div");
+   bankDiv.id = "dragBank";
+   bankDiv.style.cssText = "display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#f8fbfd; border:2px dashed #cbd5e1; border-radius:14px; min-height:80px; align-items:center;";
+   
+   bankDiv.ondragover = e => e.preventDefault();
+   bankDiv.ondrop = e => {
+     e.preventDefault();
+     const id = e.dataTransfer.getData("text/plain");
+     const el = document.getElementById(id);
+     if(el) bankDiv.appendChild(el);
+     checkDragDropReady();
+   };
+
+   const shuffledItems = shuffle(q.draggable_items);
+   shuffledItems.forEach(item => {
+     const chip = document.createElement("div");
+     chip.id = "drag_" + item.id;
+     chip.draggable = true;
+     chip.textContent = item.text;
+     chip.dataset.itemId = item.id;
+     chip.style.cssText = "background:#fff; border:2px solid var(--teal); padding:10px 16px; border-radius:10px; font-weight:bold; cursor:grab; user-select:none; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin:4px;";
+     
+     chip.ondragstart = e => {
+       e.dataTransfer.setData("text/plain", chip.id);
+     };
+     
+     chip.ontouchstart = handleTouchStart;
+     chip.ontouchmove = handleTouchMove;
+     chip.ontouchend = handleTouchEnd;
+
+     bankDiv.appendChild(chip);
+   });
+   containerDiv.appendChild(bankDiv);
+
+   const table = document.createElement("table");
+   table.style.cssText = "width:100%; border-collapse:collapse; margin-top:10px; text-align:center;";
+   
+   let theadHTML = "<tr>";
+   q.categories.forEach(cat => {
+     theadHTML += `<th style="border:2px solid #cbd5e1; background:var(--teal); color:#fff; padding:12px; font-size:1.1rem; width:33.33%;">${cat.name}</th>`;
+   });
+   theadHTML += "</tr>";
+   
+   let tbodyHTML = "<tr>";
+   q.categories.forEach(cat => {
+     tbodyHTML += `<td class="drop-zone" data-category="${cat.id}" style="border:2px solid #cbd5e1; padding:12px; vertical-align:top; min-height:140px; background:#fff; height:150px;"></td>`;
+   });
+   tbodyHTML += "</tr>";
+   
+   table.innerHTML = theadHTML + tbodyHTML;
+   containerDiv.appendChild(table);
+   answersContainer.appendChild(containerDiv);
+
+   containerDiv.querySelectorAll(".drop-zone").forEach(zone => {
+     zone.ondragover = e => e.preventDefault();
+     zone.ondrop = e => {
+       e.preventDefault();
+       const id = e.dataTransfer.getData("text/plain");
+       const el = document.getElementById(id);
+       if(el) {
+         zone.appendChild(el);
+         checkDragDropReady();
+       }
+     };
+   });
+
+ } else if(q.is_text_input) {
+   answersContainer.style.gridTemplateColumns = "1fr";
+   
+   for(let i = 0; i < (q.inputs_count || 1); i++) {
      const textarea = document.createElement("textarea");
      textarea.className = "answer-textarea";
-     textarea.placeholder = `اكتبي اجابتك هنا...`;
+     textarea.placeholder = `اكتبي تفسيرك هنا...`;
      textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
      textarea.addEventListener("input", checkTextInputReady);
      answersContainer.appendChild(textarea);
    }
  } else {
    answersContainer.style.gridTemplateColumns = "1fr 1fr";
-   answersContainer.style.maxWidth = "100%";
-   answersContainer.style.margin = "15px 0 0 0";
    
    const optionsEntries = Object.entries(q.options);
    session.shuffledOptions = shuffle(optionsEntries);
@@ -226,6 +285,60 @@ function renderQuestion(){
  $("checkBtn").disabled = true;
  $("nextBtn").classList.add("hidden");
  startQuestionTimer();
+}
+
+let activeTouchElement = null;
+let touchOffsetX = 0, touchOffsetY = 0;
+
+function handleTouchStart(e) {
+  activeTouchElement = e.target;
+  const touch = e.touches[0];
+  const rect = activeTouchElement.getBoundingClientRect();
+  touchOffsetX = touch.clientX - rect.left;
+  touchOffsetY = touch.clientY - rect.top;
+  activeTouchElement.style.position = "fixed";
+  activeTouchElement.style.zIndex = "1000";
+  activeTouchElement.style.width = rect.width + "px";
+  moveAt(touch.clientX, touch.clientY);
+}
+
+function handleTouchMove(e) {
+  if(!activeTouchElement) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  moveAt(touch.clientX, touch.clientY);
+}
+
+function moveAt(pageX, pageY) {
+  activeTouchElement.style.left = pageX - touchOffsetX + 'px';
+  activeTouchElement.style.top = pageY - touchOffsetY + 'px';
+}
+
+function handleTouchEnd(e) {
+  if(!activeTouchElement) return;
+  activeTouchElement.style.hidden = true;
+  const touch = e.changedTouches[0];
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  activeTouchElement.style.hidden = false;
+
+  activeTouchElement.style.position = "static";
+  activeTouchElement.style.zIndex = "auto";
+  activeTouchElement.style.width = "auto";
+
+  if (elemBelow) {
+    const dropZone = elemBelow.closest('.drop-zone') || elemBelow.closest('#dragBank');
+    if (dropZone) {
+      dropZone.appendChild(activeTouchElement);
+    }
+  }
+  activeTouchElement = null;
+  checkDragDropReady();
+}
+
+function checkDragDropReady() {
+  const bank = document.getElementById("dragBank");
+  const allPlaced = bank && bank.children.length === 0;
+  $("checkBtn").disabled = !allPlaced;
 }
 
 function checkTextInputReady() {
@@ -277,7 +390,35 @@ function checkAnswer(){
  const q = session.current;
  let isCorrect = false;
 
- if(q.is_text_input) {
+ if(q.is_drag_drop_table) {
+   const zones = document.querySelectorAll(".drop-zone");
+   let correctCount = 0;
+   let totalItems = q.draggable_items.length;
+
+   zones.forEach(zone => {
+     const targetCat = zone.dataset.category;
+     const itemsInZone = [...zone.children];
+     itemsInZone.forEach(el => {
+       const itemId = el.dataset.itemId;
+       const originalItem = q.draggable_items.find(i => i.id === itemId);
+       if(originalItem && originalItem.correct_category === targetCat) {
+         correctCount++;
+         el.style.borderColor = "#087f5b";
+         el.style.background = "#e8f8ef";
+       } else {
+         el.style.borderColor = "#b42318";
+         el.style.background = "#fff0ee";
+       }
+       el.draggable = false;
+       el.ontouchstart = null;
+     });
+   });
+
+   isCorrect = (correctCount === totalItems);
+   if(isCorrect) session.correct++;
+   recordAnswer(isCorrect);
+
+ } else if(q.is_text_input) {
    const textareas = [...document.querySelectorAll(".answer-textarea")];
    const userAnswers = textareas.map(ta => ta.value.trim());
    
@@ -286,7 +427,6 @@ function checkAnswer(){
      isCorrect = false;
    } else {
      const accepted = q.accepted_answers.map(ans => ans.trim());
-     // التحقق من تطابق النص المكتوب مع الإجابات التفسيرية الصحيحة المقبولة
      isCorrect = userAnswers.every(ans => accepted.some(acc => ans.includes(acc) || acc.includes(ans)));
    }
    
