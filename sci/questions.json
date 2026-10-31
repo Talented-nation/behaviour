@@ -103,5 +103,33 @@
     "expected_error": "الاعتقاد بأن الضفادع ترعى صغارها أو تحمي البيض مثل الطيور والحيوانات الأخرى.",
     "hint": "فكري في مصير البيض في البركة وهل تعود الأم لرعايته وحمايته أم لا.",
     "verified": true
+  },
+  {
+    "id": "S4_005",
+    "grade": 4,
+    "skill_code": "SC5",
+    "skill": "حالات المادة",
+    "cognitive_domain": "التطبيق",
+    "difficulty": 2,
+    "is_drag_drop_table": true,
+    "image_url": "",
+    "question": "صنّف كل مما يلي في أحد المربعات في الجدول لتبيّن ما إذا كان سائلاً أو غازاً أو صلباً في درجة حرارة الغرفة:",
+    "categories": [
+      { "id": "solid", "name": "صلب" },
+      { "id": "liquid", "name": "سائل" },
+      { "id": "gas", "name": "غاز" }
+    ],
+    "draggable_items": [
+      { "id": "item1", "text": "1- ثاني أكسيد الكربون", "correct_category": "gas" },
+      { "id": "item2", "text": "2- عصير برتقال", "correct_category": "liquid" },
+      { "id": "item3", "text": "3- خاتم ذهب", "correct_category": "solid" },
+      { "id": "item4", "text": "4- قطعة فلين", "correct_category": "solid" },
+      { "id": "item5", "text": "5- النيتروجين", "correct_category": "gas" },
+      { "id": "item6", "text": "6- قطرة دواء", "correct_category": "liquid" }
+    ],
+    "solution_steps": "الصلب: خاتم ذهب، قطعة فلين | السائل: عصير برتقال، قطرة دواء | الغاز: ثاني أكسيد الكربون، النيتروجين.",
+    "expected_error": "وضع المواد السائلة أو الغازية في غير مكانها الصحيح في الجدول.",
+    "hint": "فكري في خصائص كل مادة: الصلبة لها شكل ثابت، السائلة تأخذ شكل الإناء، والغاز ليس له شكل أو حجم ثابت.",
+    "verified": true
   }
 ]
