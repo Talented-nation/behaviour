@@ -121,7 +121,7 @@
     ],
     "draggable_items": [
       { "id": "item1", "text": "1- ثاني أكسيد الكربون", "correct_category": "gas" },
-      { "id": "item2", "text": "2- عصير برتقال", "correct_category": "liquid" },
+      { "id": "`item2`", "text": "2- عصير برتقال", "correct_category": "liquid" },
       { "id": "item3", "text": "3- خاتم ذهب", "correct_category": "solid" },
       { "id": "item4", "text": "4- قطعة فلين", "correct_category": "solid" },
       { "id": "item5", "text": "5- النيتروجين", "correct_category": "gas" },
@@ -131,12 +131,11 @@
     "expected_error": "وضع المواد السائلة أو الغازية في غير مكانها الصحيح في الجدول.",
     "hint": "فكري في خصائص كل مادة: الصلبة لها شكل ثابت، السائلة تأخذ شكل الإناء، والغاز ليس له شكل أو حجم ثابت.",
     "verified": true
-  }
-]
-{
+  },
+  {
     "id": "S4_006",
     "grade": 4,
-    "skill_code": "SC5",
+    "skill__code": "SC5",
     "skill": "حالات المادة",
     "cognitive_domain": "التطبيق",
     "difficulty": 2,
@@ -155,3 +154,4 @@
     "hint": "فكري في النشاط الذي يحدث فيه تفاعل يغير تركيب المادة الأصلية وينتج مادة جديدة كلياً لا يمكن إرجاعها بسهولة.",
     "verified": true
   }
+]
