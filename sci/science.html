@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>اختبار TIMSS التجريبي | العلوم - الصف الرابع</title>
 
-<!-- استدعاء خط Dubai منcdn -->
+<!-- استدعاء خط Dubai من cdn -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-dubai@1.0.0/css/dubai.min.css">
 
 <style>
 :root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
 *{box-sizing:border-box}
 
-/* تطبيق خط Dubai هنا */
 body{margin:0;font-family:'Dubai', Tahoma, Arial, sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
 
 button,input,select,textarea{font:inherit}
@@ -179,6 +178,9 @@ function renderQuestion(){
  $("progressBar").style.width = ((session.index / session.pool.length) * 100) + "%";
  
  let htmlContent = "";
+ if(q.question_above) {
+   htmlContent += `<div style="margin-bottom:12px;">${q.question_above.replace(/\n/g, '<br>')}</div>`;
+ }
  if(q.image_url) {
    htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:65%; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
  }
@@ -288,6 +290,25 @@ function renderQuestion(){
     b.addEventListener("click", ()=>selectAnswer(key, b));
     answersContainer.appendChild(b);
    });
+
+   if(q.is_complex) {
+     const complexWrap = document.createElement("div");
+     complexWrap.style.cssText = "grid-column: 1 / -1; margin-top: 20px; display: flex; flex-direction: column; gap: 10px;";
+     
+     const label = document.createElement("div");
+     label.textContent = q.explanation_question;
+     label.style.cssText = "font-weight: bold; font-size: 1.1rem; color: var(--navy);";
+     complexWrap.appendChild(label);
+
+     const textarea = document.createElement("textarea");
+     textarea.className = "answer-textarea complex-textarea";
+     textarea.placeholder = "اكتبي اجابتك هنا...";
+     textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
+     textarea.addEventListener("input", checkComplexReady);
+     complexWrap.appendChild(textarea);
+
+     answersContainer.appendChild(complexWrap);
+   }
  }
 
  $("feedback").classList.add("hidden");
@@ -357,14 +378,26 @@ function checkTextInputReady() {
   $("checkBtn").disabled = !allFilled;
 }
 
+function checkComplexReady() {
+  const ta = document.querySelector(".complex-textarea");
+  const hasText = ta && ta.value.trim().length > 0;
+  const hasSelected = session.selected !== null;
+  $("checkBtn").disabled = !(hasText && hasSelected);
+}
+
 function selectAnswer(key, buttonElement){
  if(session.checked) return;
  session.selected = key;
  
- [...$("answers").children].forEach(b=>{
+ [...$("answers").querySelectorAll(".answer")].forEach(b=>{
   b.classList.toggle("selected", b === buttonElement);
  });
- $("checkBtn").disabled = false;
+
+ if(session.current.is_complex) {
+   checkComplexReady();
+ } else {
+   $("checkBtn").disabled = false;
+ }
 }
 
 function startQuestionTimer(){
@@ -447,13 +480,38 @@ function checkAnswer(){
    textareas.forEach(ta => ta.disabled = true);
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
+ } else if(q.is_complex) {
+   const ta = document.querySelector(".complex-textarea");
+   const userAns = ta.value.trim();
+   const optionCorrect = session.selected === q.correct_answer;
+
+   const accepted = q.accepted_answers.map(ans => ans.trim());
+   const words = userAns.split(/\s+/);
+   const textCorrect = words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
+
+   isCorrect = optionCorrect && textCorrect;
+   ta.disabled = true;
+
+   if(isCorrect) session.correct++;
+   recordAnswer(isCorrect);
+
+   [...$("answers").querySelectorAll(".answer")].forEach((b)=>{
+    b.disabled = true;
+    const origKey = b.dataset.origKey;
+    if(origKey === q.correct_answer) {
+      b.classList.add("correct");
+    }
+    if(origKey === session.selected && !isCorrect) {
+      b.classList.add("wrong");
+    }
+   });
  } else {
    if(!session.selected) return;
    isCorrect = session.selected === q.correct_answer;
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
 
-   [...$("answers").children].forEach((b)=>{
+   [...$("answers").querySelectorAll(".answer")].forEach((b)=>{
     b.disabled = true;
     const origKey = b.dataset.origKey;
     if(origKey === q.correct_answer) {
