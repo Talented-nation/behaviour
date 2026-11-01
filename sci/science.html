@@ -4,10 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>اختبار TIMSS التجريبي | العلوم - الصف الرابع</title>
+
+<!-- استدعاء خط الرقعة من Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
 :root{--navy:#16324f;--teal:#0f8b8d;--mint:#e6f6f3;--gold:#f4b942;--ink:#243447;--muted:#64748b;--bg:#f4f7fb;--white:#fff;--red:#b42318;--green:#087f5b}
-*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
-button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
+*{box-sizing:border-box}
+
+/* تطبيق خط الرقعة هنا */
+body{margin:0;font-family:'Aref Ruqaa', serif, Tahoma, Arial;background:var(--bg);color:var(--ink);line-height:1.8}
+
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:12px;padding:11px 17px;font-weight:700;transition:.15s}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f4b942;outline-offset:2px}
 .primary{background:var(--teal);color:#fff}.secondary{background:#e7edf4;color:var(--navy)}.outline{background:#fff;border:1px solid #d5dee8;color:var(--navy)}button:disabled{opacity:.5;cursor:not-allowed}
 header{background:linear-gradient(120deg,#16324f,#0f8b8d);color:#fff;padding:20px 18px}
 .wrap{max-width:1000px;margin:auto;padding:20px 16px}
@@ -24,10 +36,10 @@ h2{margin:0 0 10px;font-size:1.35rem;color:var(--navy)}h3{margin:0 0 8px;color:v
 .progress{height:9px;background:#e7edf4;border-radius:999px;overflow:hidden;margin:12px 0}.progress>div{height:100%;background:linear-gradient(90deg,var(--teal),#65c9b8);width:0;transition:width .25s}
 .timer-wrap{margin:12px 0 18px;padding:12px 14px;background:#f8fbfd;border:1px solid #e1e8ef;border-radius:14px}.timer-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-weight:700}.timer-track{height:12px;background:#e7edf4;border-radius:999px;overflow:hidden}.timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#0f8b8d,#65c9b8);border-radius:999px;transition:width 1s linear,background .2s}.timer-fill.warning{background:#f4b942}.timer-fill.danger{background:#b42318}.timer-number{font-variant-numeric:tabular-nums;color:var(--navy)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f7fafc;border-radius:14px;padding:12px;text-align:center}.stat strong{display:block;font-size:1.35rem;color:var(--navy)}
-.question{font-size:1.2rem;font-weight:700;line-height:1.9;margin:18px 0;direction:rtl;text-align:right}
+.question{font-size:1.25rem;font-weight:700;line-height:1.9;margin:18px 0;direction:rtl;text-align:right}
 
 .answers{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
-.answer{background:#fff;border:2px solid #dbe4ec;text-align:right;direction:rtl;padding:14px;border-radius:13px;color:var(--ink);font-weight:700;font-size:1.1rem;min-height:58px;transition:.2s}
+.answer{background:#fff;border:2px solid #dbe4ec;text-align:right;direction:rtl;padding:14px;border-radius:13px;color:var(--ink);font-weight:700;font-size:1.15rem;min-height:58px;transition:.2s}
 .answer:hover{border-color:var(--teal);background:#f3fbfa}
 .answer.selected{border-color:var(--teal);background:var(--mint)}
 .answer.correct{border-color:#5bbf97;background:#e8f8ef}
@@ -422,15 +434,12 @@ function checkAnswer(){
    const textareas = [...document.querySelectorAll(".answer-textarea")];
    const userAnswers = textareas.map(ta => ta.value.trim());
    
-   // التحقق من ألا تقل الإجابة عن 3 أحرف لرفض الحروف المفردة مثل "س"
    const hasValidLength = userAnswers.every(ans => ans.length >= 3);
-   
    const uniqueAnswers = new Set(userAnswers);
    if(!hasValidLength || uniqueAnswers.size !== userAnswers.length) {
      isCorrect = false;
    } else {
      const accepted = q.accepted_answers.map(ans => ans.trim());
-     // مطابقة الكلمات الكاملة بدلاً من مجرد تطابق جزئي للحروف
      isCorrect = userAnswers.every(ans => {
        const words = ans.split(/\s+/);
        return words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
