@@ -74,6 +74,7 @@
     "difficulty": 3,
     "is_text_input": true,
     "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic3.png",
+    "question_above": "تبين الصورة أسماكًا وسلحفاة بحرية تسبح، وتوجد بالقرب منها أكياس بلاستيك (نايلون)",
     "question": "اكتب سببا واحدًا يجعل الأكياس البلاستيكية التي ترمى في البحر خطيرة في الغالب على السلاحف البحرية.",
     "inputs_count": 1,
     "accepted_answers": [
