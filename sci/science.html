@@ -269,9 +269,9 @@ function renderQuestion(){
    
    for(let i = 0; i < (q.inputs_count || 1); i++) {
      if (q.input_labels && q.input_labels[i]) {
-       // تنسيق خاص ومجاور للسؤال الحسابي/العددي ذو العناوين المحددة (مثل سؤال الخشب والصخر والحديد)
+       // تنسيق خاص ومجاور للسؤال الحسابي/العددي S4_030 (مربع الإدخال جهة اليمين)
        const rowDiv = document.createElement("div");
-       rowDiv.style.cssText = "display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin-bottom: 12px; direction: rtl;";
+       rowDiv.style.cssText = "display: flex; align-items: center; justify-content: flex-start; gap: 15px; margin-bottom: 12px; direction: rtl;";
        
        const textarea = document.createElement("textarea");
        textarea.className = "answer-textarea";
@@ -287,7 +287,7 @@ function renderQuestion(){
 
        answersContainer.appendChild(rowDiv);
      } else {
-       // التنسيق القياسي الأصلي للأسئلة النصية العادية (مثل سؤال الاحتياجات وسؤال النايلون)
+       // التنسيق القياسي الأصلي للأسئلة النصية العادية
        const textarea = document.createElement("textarea");
        textarea.className = "answer-textarea";
        textarea.placeholder = `اكتبي اجابتك هنا...`;
