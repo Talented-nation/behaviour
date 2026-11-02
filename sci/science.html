@@ -268,12 +268,24 @@ function renderQuestion(){
    answersContainer.style.gridTemplateColumns = "1fr";
    
    for(let i = 0; i < (q.inputs_count || 1); i++) {
+     const wrapper = document.createElement("div");
+     wrapper.style.cssText = "margin-bottom: 14px;";
+     
+     if(q.input_labels && q.input_labels[i]) {
+       const lbl = document.createElement("div");
+       lbl.textContent = q.input_labels[i];
+       lbl.style.cssText = "font-weight: bold; margin-bottom: 6px; color: var(--navy); font-size: 1.1rem;";
+       wrapper.appendChild(lbl);
+     }
+     
      const textarea = document.createElement("textarea");
      textarea.className = "answer-textarea";
-     textarea.placeholder = `اكتبي اجابتك هنا...`;
-     textarea.style.cssText = "width:100%; min-height:110px; padding:16px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.7; resize:vertical;";
+     textarea.placeholder = "اكتبي الإجابة هنا...";
+     textarea.style.cssText = "width:100%; min-height:55px; padding:12px; border:2px solid #dbe4ec; border-radius:12px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.5; resize:vertical;";
      textarea.addEventListener("input", checkTextInputReady);
-     answersContainer.appendChild(textarea);
+     wrapper.appendChild(textarea);
+     
+     answersContainer.appendChild(wrapper);
    }
  } else {
    answersContainer.style.gridTemplateColumns = "1fr 1fr";
@@ -465,10 +477,17 @@ function checkAnswer(){
    const textareas = [...document.querySelectorAll(".answer-textarea")];
    const userAnswers = textareas.map(ta => ta.value.trim());
    
-   const hasValidLength = userAnswers.every(ans => ans.length >= 3);
-   const uniqueAnswers = new Set(userAnswers);
-   if(!hasValidLength || uniqueAnswers.size !== userAnswers.length) {
+   const hasValidLength = q.is_number_input ? userAnswers.every(ans => ans.length > 0) : userAnswers.every(ans => ans.length >= 3);
+   const uniqueAnswers = q.allow_duplicate_inputs ? true : (new Set(userAnswers).size === userAnswers.length);
+   
+   if(!hasValidLength || !uniqueAnswers) {
      isCorrect = false;
+   } else if(q.per_input_answers) {
+     isCorrect = userAnswers.every((ans, idx) => {
+       const accepted = q.per_input_answers[idx] || [];
+       const cleanAns = ans.replace(/\s+/g, '');
+       return accepted.some(acc => cleanAns === acc || cleanAns.includes(acc));
+     });
    } else {
      const accepted = q.accepted_answers.map(ans => ans.trim());
      isCorrect = userAnswers.every(ans => {
