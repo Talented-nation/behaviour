@@ -30,7 +30,8 @@
     "difficulty": 2,
     "is_text_input": false,
     "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic2.png",
-    "question": "",
+    "question_above": "يالحيوانات عادة لها صفات طبيعية تساعدها على العيش في أماكن محددة. أنظر إلى الصورة. هذا الحيوان يعيش في الصحراء الحارة والجافة.",
+    "question": "ما الصفة الطبيعية لهذا الحيوان والتي تساعده على فقد الحرارة؟",
     "options": {
       "A": "الغطاء السميك للفراء",
       "B": "العيون الصغيرة",
