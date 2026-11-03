@@ -674,9 +674,9 @@
   {
     "id": "S4_033",
     "grade": 4,
-    "skill_code": "SC10",
-    "skill": "الفضاء",
-    "cognitive_domain": "التطبيق",
+    "skill_code": "SC9",
+    "skill": "الخصائص الطبيعية",
+    "cognitive_domain": "المعرفة",
     "difficulty": 2,
     "is_text_input": false,
     "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic16.png",
@@ -692,6 +692,34 @@
     "solution_steps": "التعرية الريحية تحدث عندما تهب الرياح محملة بحبيبات الرمال التي تعمل كأداة كحت واحتكاك مستمر بالصخور لترسم أشكالاً منحوتة بمرور الزمن.",
     "expected_error": "الاعتقاد بأن الرياح تذيب الصخور أو تبردها بشكل مباشر لتشكيلها.",
     "hint": "فكري في تأثير الرمال التي تحملها الرياح وتصطدم بالصخور.",
+    "verified": true
+  },
+  {
+    "id": "S4_034",
+    "grade": 4,
+    "skill_code": "SC10",
+    "skill": "الفضاء",
+    "cognitive_domain": "التفكير الاستدلالي",
+    "difficulty": 2,
+    "is_complex": true,
+    "question_above": "يوضح الجدول أدناه المسافة بين الشمس وأربعة كواكب في النظام الشمسي.",
+    "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic17.png",
+    "question": "ما الكواكب الأقرب للشمس",
+    "options": {
+      "A": "الأرض",
+      "B": "المريخ",
+      "C": "عطارد",
+      "D": "زحل"
+    },
+    "correct_answer": "C",
+    "explanation_question": "أي من تلك الكواكب الأربعة يكثر احتمال احتوائه على المعدل الأدنى لدرجة حرارة سطحه؟",
+    "accepted_answers": [
+      "زحل",
+      "الكوكب زحل"
+    ],
+    "solution_steps": "الكوكب الأقرب للشمس هو عطارد (الخيار C). وأما الكوكب الأكثر احتمالاً لاحتوائه على المعدل الأدنى لدرجة حرارة سطحه فهو زحل لبعده الشديد عن الشمس.",
+    "expected_error": "اختيار كوكب خاطئ في الخيارات أو كتابة اسم كوكب آخر غير زحل في مربع النص.",
+    "hint": "تذكري ترتيب الكواكب من حيث القرب والبعد عن الشمس.",
     "verified": true
   }
 ]
