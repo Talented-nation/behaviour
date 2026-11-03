@@ -267,27 +267,39 @@ function renderQuestion(){
  } else if(q.is_text_input) {
    answersContainer.style.gridTemplateColumns = "1fr";
    
-   for(let i = 0; i < (q.inputs_count || 1); i++) {
-     if (q.input_labels && q.input_labels[i]) {
-       // تنسيق خاص ومجاور للسؤال الحسابي/العددي S4_030 (مربع الإدخال جهة اليمين)
-       const rowDiv = document.createElement("div");
-       rowDiv.style.cssText = "display: flex; align-items: center; justify-content: flex-start; gap: 15px; margin-bottom: 12px; direction: rtl;";
+   if (q.id === "S4_030") {
+     // جدول خاص بالسؤال S4_030 على جهة اليمين، حدود الجدول شفافة وحدود خلايا كتابة الإجابة واضحة
+     const table = document.createElement("table");
+     table.style.cssText = "border-collapse: collapse; margin-left: auto; margin-right: 0; direction: rtl; border: none;";
+     
+     for(let i = 0; i < (q.inputs_count || 1); i++) {
+       const tr = document.createElement("tr");
+       tr.style.cssText = "border: none;";
        
-       const textarea = document.createElement("textarea");
-       textarea.className = "answer-textarea";
-       textarea.placeholder = "…";
-       textarea.style.cssText = "width: 90px; min-height: 46px; max-height: 48px; padding: 8px; border: 2px solid #dbe4ec; border-radius: 12px; font-size: 1.15rem; font-weight: bold; outline: none; background: #fff; text-align: center; line-height: 1.3; resize: none;";
-       textarea.addEventListener("input", checkTextInputReady);
-       rowDiv.appendChild(textarea);
-
-       const lbl = document.createElement("div");
-       lbl.textContent = q.input_labels[i];
-       lbl.style.cssText = "font-weight: bold; color: var(--navy); font-size: 1.15rem; text-align: right;";
-       rowDiv.appendChild(lbl);
-
-       answersContainer.appendChild(rowDiv);
-     } else {
-       // التنسيق القياسي الأصلي للأسئلة النصية العادية
+       // خلية النص
+       const tdLabel = document.createElement("td");
+       tdLabel.style.cssText = "padding: 8px 12px 8px 0; font-weight: bold; color: var(--navy); font-size: 1.15rem; text-align: right; border: none; vertical-align: middle;";
+       tdLabel.textContent = q.input_labels[i];
+       
+       // خلية الإدخال بحدود واضحة
+       const tdInput = document.createElement("td");
+       tdInput.style.cssText = "padding: 8px 12px; border: 2px solid #243447; text-align: center; vertical-align: middle;";
+       
+       const input = document.createElement("input");
+       input.type = "text";
+       input.className = "answer-textarea";
+       input.style.cssText = "width: 70px; height: 42px; border: none; outline: none; font-size: 1.2rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
+       input.addEventListener("input", checkTextInputReady);
+       
+       tdInput.appendChild(input);
+       tr.appendChild(tdInput);
+       tr.appendChild(tdLabel);
+       table.appendChild(tr);
+     }
+     answersContainer.appendChild(table);
+   } else {
+     // التنسيق القياسي الأصلي لبقية الأسئلة النصية
+     for(let i = 0; i < (q.inputs_count || 1); i++) {
        const textarea = document.createElement("textarea");
        textarea.className = "answer-textarea";
        textarea.placeholder = `اكتبي اجابتك هنا...`;
