@@ -182,7 +182,8 @@ function renderQuestion(){
    htmlContent += `<div style="margin-bottom:12px;">${q.question_above.replace(/\n/g, '<br>')}</div>`;
  }
  if(q.image_url) {
-   htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:65%; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
+   const imgMaxWidth = q.id === "S4_031" ? "85%" : "65%";
+   htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:${imgMaxWidth}; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
  }
  if(q.question && q.question.trim() !== "") {
    htmlContent += `<div>${q.question.replace(/\n/g, '<br>')}</div>`;
