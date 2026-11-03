@@ -268,30 +268,30 @@ function renderQuestion(){
    answersContainer.style.gridTemplateColumns = "1fr";
    
    if (q.id === "S4_030") {
-     // جدول خاص بالسؤال S4_030 على جهة اليمين، حدود الجدول شفافة وحدود خلايا كتابة الإجابة واضحة
+     // جدول خاص بالسؤال S4_030 على جهة اليمين، حدود الجدول مخفية وحدود مربعات الإدخال واضحة كالصورة
      const table = document.createElement("table");
-     table.style.cssText = "border-collapse: collapse; margin-left: auto; margin-right: 0; direction: rtl; border: none;";
+     table.style.cssText = "border-collapse: collapse; margin-left: auto; margin-right: 0; direction: rtl; border: none; background: transparent;";
      
      for(let i = 0; i < (q.inputs_count || 1); i++) {
        const tr = document.createElement("tr");
-       tr.style.cssText = "border: none;";
+       tr.style.cssText = "border: none; background: transparent;";
        
-       // خلية النص
-       const tdLabel = document.createElement("td");
-       tdLabel.style.cssText = "padding: 8px 12px 8px 0; font-weight: bold; color: var(--navy); font-size: 1.15rem; text-align: right; border: none; vertical-align: middle;";
-       tdLabel.textContent = q.input_labels[i];
-       
-       // خلية الإدخال بحدود واضحة
+       // خلية مربع الإدخال (على اليمين) بحدود واضحة ومربعة
        const tdInput = document.createElement("td");
-       tdInput.style.cssText = "padding: 8px 12px; border: 2px solid #243447; text-align: center; vertical-align: middle;";
+       tdInput.style.cssText = "padding: 10px; border: 2px solid #243447; text-align: center; vertical-align: middle; width: 80px; height: 60px; background: #fff;";
        
        const input = document.createElement("input");
        input.type = "text";
        input.className = "answer-textarea";
-       input.style.cssText = "width: 70px; height: 42px; border: none; outline: none; font-size: 1.2rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
+       input.style.cssText = "width: 100%; height: 100%; border: none; outline: none; font-size: 1.3rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
        input.addEventListener("input", checkTextInputReady);
-       
        tdInput.appendChild(input);
+       
+       // خلية النص التوضيحي (على اليسار) بدون أي حدود
+       const tdLabel = document.createElement("td");
+       tdLabel.style.cssText = "padding: 10px 15px 10px 0; font-weight: bold; color: var(--navy); font-size: 1.15rem; text-align: right; border: none; vertical-align: middle; background: transparent;";
+       tdLabel.textContent = q.input_labels[i];
+       
        tr.appendChild(tdInput);
        tr.appendChild(tdLabel);
        table.appendChild(tr);
