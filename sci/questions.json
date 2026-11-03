@@ -704,7 +704,7 @@
     "is_complex": true,
     "question_above": "يوضح الجدول أدناه المسافة بين الشمس وأربعة كواكب في النظام الشمسي.",
     "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic17.png",
-    "question": "ما الكواكب الأقرب للشمس",
+    "question": "ما الكواكب الأقرب للشمس؟",
     "options": {
       "A": "الأرض",
       "B": "المريخ",
