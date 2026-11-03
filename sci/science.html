@@ -268,17 +268,22 @@ function renderQuestion(){
    answersContainer.style.gridTemplateColumns = "1fr";
    
    if (q.id === "S4_030") {
-     // جدول خاص بالسؤال S4_030 على جهة اليمين، حدود الجدول مخفية وحدود مربعات الإدخال واضحة كالصورة
+     // جدول خاص بالسؤال S4_030 محاذى لليمين تماماً كما في الصورة المرفقة
      const table = document.createElement("table");
-     table.style.cssText = "border-collapse: collapse; margin-left: auto; margin-right: 0; direction: rtl; border: none; background: transparent;";
+     table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff;";
      
      for(let i = 0; i < (q.inputs_count || 1); i++) {
        const tr = document.createElement("tr");
-       tr.style.cssText = "border: none; background: transparent;";
+       tr.style.cssText = "border-bottom: 2px solid #000;";
        
-       // خلية مربع الإدخال (على اليمين) بحدود واضحة ومربعة
+       // خلية النص التوضيحي (على اليمين) بحدود سوداء واضحة
+       const tdLabel = document.createElement("td");
+       tdLabel.style.cssText = "padding: 10px 18px; font-weight: bold; color: #000; font-size: 1.2rem; text-align: right; border-left: 2px solid #000; vertical-align: middle; white-space: nowrap;";
+       tdLabel.textContent = q.input_labels[i];
+
+       // خلية مربع الإدخال (على اليسار) بحدود سوداء واضحة
        const tdInput = document.createElement("td");
-       tdInput.style.cssText = "padding: 10px; border: 2px solid #243447; text-align: center; vertical-align: middle; width: 80px; height: 60px; background: #fff;";
+       tdInput.style.cssText = "padding: 5px; text-align: center; vertical-align: middle; width: 90px; height: 50px;";
        
        const input = document.createElement("input");
        input.type = "text";
@@ -287,13 +292,8 @@ function renderQuestion(){
        input.addEventListener("input", checkTextInputReady);
        tdInput.appendChild(input);
        
-       // خلية النص التوضيحي (على اليسار) بدون أي حدود
-       const tdLabel = document.createElement("td");
-       tdLabel.style.cssText = "padding: 10px 15px 10px 0; font-weight: bold; color: var(--navy); font-size: 1.15rem; text-align: right; border: none; vertical-align: middle; background: transparent;";
-       tdLabel.textContent = q.input_labels[i];
-       
-       tr.appendChild(tdInput);
        tr.appendChild(tdLabel);
+       tr.appendChild(tdInput);
        table.appendChild(tr);
      }
      answersContainer.appendChild(table);
