@@ -268,7 +268,7 @@ function renderQuestion(){
    answersContainer.style.gridTemplateColumns = "1fr";
    
    if (q.id === "S4_030") {
-     // جدول خاص بالسؤال S4_030 محاذى لليمين تماماً كما في الصورة المرفقة
+     // جدول خاص بالسؤال S4_030 على جهة اليمين
      const table = document.createElement("table");
      table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff;";
      
@@ -276,12 +276,10 @@ function renderQuestion(){
        const tr = document.createElement("tr");
        tr.style.cssText = "border-bottom: 2px solid #000;";
        
-       // خلية النص التوضيحي (على اليمين) بحدود سوداء واضحة
        const tdLabel = document.createElement("td");
        tdLabel.style.cssText = "padding: 10px 18px; font-weight: bold; color: #000; font-size: 1.2rem; text-align: right; border-left: 2px solid #000; vertical-align: middle; white-space: nowrap;";
        tdLabel.textContent = q.input_labels[i];
 
-       // خلية مربع الإدخال (على اليسار) بحدود سوداء واضحة
        const tdInput = document.createElement("td");
        tdInput.style.cssText = "padding: 5px; text-align: center; vertical-align: middle; width: 90px; height: 50px;";
        
@@ -289,6 +287,49 @@ function renderQuestion(){
        input.type = "text";
        input.className = "answer-textarea";
        input.style.cssText = "width: 100%; height: 100%; border: none; outline: none; font-size: 1.3rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
+       input.addEventListener("input", checkTextInputReady);
+       tdInput.appendChild(input);
+       
+       tr.appendChild(tdLabel);
+       tr.appendChild(tdInput);
+       table.appendChild(tr);
+     }
+     answersContainer.appendChild(table);
+   } else if (q.id === "S4_031") {
+     // جدول خاص بالسؤال S4_031 (الآلات البسيطة: الآلة يميناً ورمز الصورة يساراً) محاذاة لليمين
+     const table = document.createElement("table");
+     table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff; width: 100%; max-width: 500px;";
+     
+     const thead = document.createElement("tr");
+     thead.style.cssText = "border-bottom: 2px solid #000; background: #f8fbfd;";
+     
+     const th1 = document.createElement("th");
+     th1.style.cssText = "padding: 12px 18px; border-left: 2px solid #000; text-align: right; font-weight: bold; font-size: 1.15rem; color: var(--navy); width: 60%;";
+     th1.textContent = "الآلة البسيطة";
+     
+     const th2 = document.createElement("th");
+     th2.style.cssText = "padding: 12px 18px; text-align: center; font-weight: bold; font-size: 1.15rem; color: var(--navy); width: 40%;";
+     th2.textContent = "رمز الصورة";
+     
+     thead.appendChild(th1);
+     thead.appendChild(th2);
+     table.appendChild(thead);
+     
+     for(let i = 0; i < (q.inputs_count || 1); i++) {
+       const tr = document.createElement("tr");
+       tr.style.cssText = "border-bottom: 2px solid #000;";
+       
+       const tdLabel = document.createElement("td");
+       tdLabel.style.cssText = "padding: 12px 18px; font-weight: bold; color: #000; font-size: 1.1rem; text-align: right; border-left: 2px solid #000; vertical-align: middle;";
+       tdLabel.textContent = q.input_labels[i];
+
+       const tdInput = document.createElement("td");
+       tdInput.style.cssText = "padding: 6px; text-align: center; vertical-align: middle; height: 50px;";
+       
+       const input = document.createElement("input");
+       input.type = "text";
+       input.className = "answer-textarea";
+       input.style.cssText = "width: 100%; height: 100%; border: none; outline: none; font-size: 1.25rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
        input.addEventListener("input", checkTextInputReady);
        tdInput.appendChild(input);
        
