@@ -8,7 +8,8 @@
     "difficulty": 2,
     "is_text_input": true,
     "image_url": "https://talented-nation.github.io/behaviour/sci/pics/pic1.png",
-    "question": "",
+    "question_above": "كل الحيوانات أدناه، وغيرها تحتاج إلى الماء لكى تبقى على قيد الحياة.",
+    "question": "اذكر شيئين آخرين تحتاج إليهما هذه الحيوانات كي تبقى على قيد الحياة.",
     "inputs_count": 2,
     "accepted_answers": [
       "الغذاء", "الهواء", "المأوى", "الدفء", "الأكسجين", "يتنفس", "التنفس", 
