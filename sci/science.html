@@ -266,9 +266,19 @@ function renderQuestion(){
    });
 
  } else if(q.is_text_input) {
-   answersContainer.style.gridTemplateColumns = "1fr";
-   
-   if (q.id === "S4_030") {
+   // تعديل خاص بالسؤال S4_001 ليكون المربعات أفقية تماماً مثل الصورة المطلوبة
+   if (q.id === "S4_001") {
+     answersContainer.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
+     for(let i = 0; i < (q.inputs_count || 2); i++) {
+       const textarea = document.createElement("textarea");
+       textarea.className = "answer-textarea";
+       textarea.placeholder = `اكتبي اجابتك هنا...`;
+       textarea.style.cssText = "width:100%; min-height:65px; padding:14px; border:2px solid #dbe4ec; border-radius:14px; font-size:1.15rem; font-weight:bold; outline:none; background:#fff; text-align:right; line-height:1.5; resize:none;";
+       textarea.addEventListener("input", checkTextInputReady);
+       answersContainer.appendChild(textarea);
+     }
+   } else if (q.id === "S4_030") {
+     answersContainer.style.gridTemplateColumns = "1fr";
      // جدول خاص بالسؤال S4_030 على جهة اليمين
      const table = document.createElement("table");
      table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff;";
@@ -297,6 +307,7 @@ function renderQuestion(){
      }
      answersContainer.appendChild(table);
    } else if (q.id === "S4_031") {
+     answersContainer.style.gridTemplateColumns = "1fr";
      // جدول خاص بالسؤال S4_031 (الآلات البسيطة: الآلة يميناً ورمز الصورة يساراً) محاذاة لليمين
      const table = document.createElement("table");
      table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff; width: 100%; max-width: 500px;";
@@ -340,6 +351,7 @@ function renderQuestion(){
      }
      answersContainer.appendChild(table);
    } else {
+     answersContainer.style.gridTemplateColumns = "1fr";
      // التنسيق القياسي الأصلي لبقية الأسئلة النصية
      for(let i = 0; i < (q.inputs_count || 1); i++) {
        const textarea = document.createElement("textarea");
