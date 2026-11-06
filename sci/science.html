@@ -185,7 +185,7 @@ function renderQuestion(){
    const imgMaxWidth = q.id === "S4_031" ? "85%" : "65%";
    htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:${imgMaxWidth}; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
  }
- if(q.question && q.question.trim() !== "") {
+ if(q.question && q.question.trim() !== "" && q.id !== "S4_005") {
    htmlContent += `<div>${q.question.replace(/\n/g, '<br>')}</div>`;
  }
  $("questionText").innerHTML = htmlContent;
@@ -266,8 +266,58 @@ function renderQuestion(){
    });
 
  } else if(q.is_text_input) {
-   // تعديل خاص بالسؤال S4_001 ليكون المربعات أفقية تماماً مثل الصورة المطلوبة
-   if (q.id === "S4_001") {
+   if (q.id === "S4_005") {
+     answersContainer.style.gridTemplateColumns = "1fr";
+
+     // Items box at top
+     const itemsBox = document.createElement("div");
+     itemsBox.style.cssText = "display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#f8fbfd; border:2px dashed #cbd5e1; border-radius:14px; justify-content:center; margin-bottom:15px; direction:rtl;";
+     q.items_box.forEach(itemText => {
+       const badge = document.createElement("div");
+       badge.textContent = itemText;
+       badge.style.cssText = "background:#fff; border:2px solid var(--teal); padding:8px 14px; border-radius:10px; font-weight:bold; font-size:1rem; color:var(--ink);";
+       itemsBox.appendChild(badge);
+     });
+     answersContainer.appendChild(itemsBox);
+
+     if(q.question && q.question.trim() !== "") {
+       const instr = document.createElement("div");
+       instr.style.cssText = "font-weight:bold; margin-bottom:12px; font-size:1.15rem; color:var(--navy); text-align:right; direction:rtl;";
+       instr.textContent = q.question;
+       answersContainer.appendChild(instr);
+     }
+
+     const table = document.createElement("table");
+     table.style.cssText = "border-collapse: collapse; margin-right: auto; margin-left: auto; direction: rtl; border: 2px solid #16324f; background: #fff; width: 100%; max-width: 550px;";
+
+     q.categories.forEach((cat) => {
+       const tr = document.createElement("tr");
+       tr.style.cssText = "border-bottom: 2px solid #16324f;";
+
+       const tdCat = document.createElement("td");
+       tdCat.style.cssText = "padding: 14px 20px; font-weight: bold; color: #fff; background: var(--teal); font-size: 1.2rem; text-align: center; border-left: 2px solid #16324f; width: 35%;";
+       tdCat.textContent = cat.name;
+       tr.appendChild(tdCat);
+
+       for(let i = 0; i < 2; i++) {
+         const tdInput = document.createElement("td");
+         tdInput.style.cssText = "padding: 8px; text-align: center; vertical-align: middle; width: 32.5%; height: 60px; border-left: 2px solid #16324f;";
+         
+         const input = document.createElement("input");
+         input.type = "text";
+         input.className = "answer-textarea s4-005-input";
+         input.dataset.category = cat.id;
+         input.placeholder = "كتابة الرقم";
+         input.style.cssText = "width: 100%; height: 100%; border: none; outline: none; font-size: 1.15rem; font-weight: bold; text-align: center; background: transparent; font-family: inherit;";
+         input.addEventListener("input", checkTextInputReady);
+         tdInput.appendChild(input);
+         tr.appendChild(tdInput);
+       }
+       table.appendChild(tr);
+     });
+     answersContainer.appendChild(table);
+
+   } else if (q.id === "S4_001") {
      answersContainer.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
      for(let i = 0; i < (q.inputs_count || 2); i++) {
        const textarea = document.createElement("textarea");
@@ -279,7 +329,6 @@ function renderQuestion(){
      }
    } else if (q.id === "S4_030") {
      answersContainer.style.gridTemplateColumns = "1fr";
-     // جدول خاص بالسؤال S4_030 على جهة اليمين
      const table = document.createElement("table");
      table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff;";
      
@@ -308,7 +357,6 @@ function renderQuestion(){
      answersContainer.appendChild(table);
    } else if (q.id === "S4_031") {
      answersContainer.style.gridTemplateColumns = "1fr";
-     // جدول خاص بالسؤال S4_031 (الآلات البسيطة: الآلة يميناً ورمز الصورة يساراً) محاذاة لليمين
      const table = document.createElement("table");
      table.style.cssText = "border-collapse: collapse; margin-right: 0; margin-left: auto; direction: rtl; border: 2px solid #000; background: #fff; width: 100%; max-width: 500px;";
      
@@ -352,7 +400,6 @@ function renderQuestion(){
      answersContainer.appendChild(table);
    } else {
      answersContainer.style.gridTemplateColumns = "1fr";
-     // التنسيق القياسي الأصلي لبقية الأسئلة النصية
      for(let i = 0; i < (q.inputs_count || 1); i++) {
        const textarea = document.createElement("textarea");
        textarea.className = "answer-textarea";
@@ -549,31 +596,57 @@ function checkAnswer(){
    recordAnswer(isCorrect);
 
  } else if(q.is_text_input) {
-   const textareas = [...document.querySelectorAll(".answer-textarea")];
-   const userAnswers = textareas.map(ta => ta.value.trim());
-   
-   const hasValidLength = q.is_number_input ? userAnswers.every(ans => ans.length > 0) : userAnswers.every(ans => ans.length >= 3);
-   const uniqueAnswers = q.allow_duplicate_inputs ? true : (new Set(userAnswers).size === userAnswers.length);
-   
-   if(!hasValidLength || !uniqueAnswers) {
-     isCorrect = false;
-   } else if(q.per_input_answers) {
-     isCorrect = userAnswers.every((ans, idx) => {
-       const accepted = q.per_input_answers[idx] || [];
-       const cleanAns = ans.replace(/\s+/g, '');
-       return accepted.some(acc => cleanAns === acc || cleanAns.includes(acc));
+   if (q.id === "S4_005") {
+     const inputs = [...document.querySelectorAll(".s4-005-input")];
+     const catValues = {};
+     q.categories.forEach(cat => {
+       catValues[cat.id] = inputs.filter(inp => inp.dataset.category === cat.id).map(inp => inp.value.trim().replace(/\s+/g, ''));
      });
+
+     const allFilled = inputs.every(inp => inp.value.trim().length > 0);
+     if(!allFilled) {
+       isCorrect = false;
+     } else {
+       isCorrect = q.categories.every(cat => {
+         const userVals = catValues[cat.id];
+         const accepted = cat.accepted;
+         return userVals.length === 2 && 
+                userVals.every(v => accepted.includes(v)) && 
+                userVals[0] !== userVals[1];
+       });
+     }
+
+     inputs.forEach(inp => inp.disabled = true);
+     if(isCorrect) session.correct++;
+     recordAnswer(isCorrect);
+
    } else {
-     const accepted = q.accepted_answers.map(ans => ans.trim());
-     isCorrect = userAnswers.every(ans => {
-       const words = ans.split(/\s+/);
-       return words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
-     });
+     const textareas = [...document.querySelectorAll(".answer-textarea")];
+     const userAnswers = textareas.map(ta => ta.value.trim());
+     
+     const hasValidLength = q.is_number_input ? userAnswers.every(ans => ans.length > 0) : userAnswers.every(ans => ans.length >= 3);
+     const uniqueAnswers = q.allow_duplicate_inputs ? true : (new Set(userAnswers).size === userAnswers.length);
+     
+     if(!hasValidLength || !uniqueAnswers) {
+       isCorrect = false;
+     } else if(q.per_input_answers) {
+       isCorrect = userAnswers.every((ans, idx) => {
+         const accepted = q.per_input_answers[idx] || [];
+         const cleanAns = ans.replace(/\s+/g, '');
+         return accepted.some(acc => cleanAns === acc || cleanAns.includes(acc));
+       });
+     } else {
+       const accepted = q.accepted_answers.map(ans => ans.trim());
+       isCorrect = userAnswers.every(ans => {
+         const words = ans.split(/\s+/);
+         return words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
+       });
+     }
+     
+     textareas.forEach(ta => ta.disabled = true);
+     if(isCorrect) session.correct++;
+     recordAnswer(isCorrect);
    }
-   
-   textareas.forEach(ta => ta.disabled = true);
-   if(isCorrect) session.correct++;
-   recordAnswer(isCorrect);
  } else if(q.is_complex) {
    const ta = document.querySelector(".complex-textarea");
    const userAns = ta.value.trim();
