@@ -185,7 +185,7 @@ function renderQuestion(){
    const imgMaxWidth = q.id === "S4_031" ? "85%" : "65%";
    htmlContent += `<div style="text-align:center; margin-bottom:15px;"><img src="${q.image_url}" alt="صورة السؤال" style="max-width:${imgMaxWidth}; height:auto; border-radius:12px; border:1px solid #dbe4ec;"></div>`;
  }
- if(q.question && q.question.trim() !== "") {
+ if(q.question && q.question.trim() !== "" && q.id !== "S4_005") {
    htmlContent += `<div>${q.question.replace(/\n/g, '<br>')}</div>`;
  }
  $("questionText").innerHTML = htmlContent;
@@ -193,15 +193,15 @@ function renderQuestion(){
  const answersContainer = $("answers");
  answersContainer.innerHTML = "";
 
- if(q.is_table_input) {
+ if(q.id === "S4_005") {
    answersContainer.style.gridTemplateColumns = "1fr";
    
    const containerDiv = document.createElement("div");
    containerDiv.style.cssText = "display:flex; flex-direction:column; gap:20px; direction:rtl;";
    
-   // الحاوية العلوية للعناصر المبعثرة
+   // الحاوية العلوية للعناصر المبعثرة داخل إطار منقط
    const bankDiv = document.createElement("div");
-   bankDiv.style.cssText = "display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#f8fbfd; border:2px dashed #cbd5e1; border-radius:14px; min-height:80px; align-items:center;";
+   bankDiv.style.cssText = "display:flex; flex-wrap:wrap; gap:10px; padding:15px; background:#f8fbfd; border:2px dashed #cbd5e1; border-radius:14px; min-height:80px; align-items:center; justify-content:center;";
 
    const shuffledItems = shuffle(q.draggable_items);
    shuffledItems.forEach(item => {
@@ -215,42 +215,36 @@ function renderQuestion(){
    // نص السؤال الخاص بالجدول
    if(q.question) {
      const qText = document.createElement("div");
-     qText.style.cssText = "font-size: 1.15rem; font-weight: bold; color: var(--navy); margin-top: 5px;";
+     qText.style.cssText = "font-size: 1.15rem; font-weight: bold; color: var(--navy); margin-top: 5px; text-align: right;";
      qText.textContent = q.question;
      containerDiv.appendChild(qText);
    }
 
-   // جدول كتابة الأرقام
+   // جدول كتابة الأرقام المطابق للصورة تماماً
    const table = document.createElement("table");
-   table.style.cssText = "width:100%; border-collapse:collapse; margin-top:5px; text-align:center; border:2px solid #000; background:#fff;";
+   table.style.cssText = "width:100%; border-collapse:collapse; margin-top:5px; text-align:center; border:2px solid #000; background:#fff; max-width: 600px; margin-right: auto; margin-left: auto;";
    
-   let theadHTML = "<tr style='border-bottom:2px solid #000; background:var(--teal); color:#fff;'>";
+   let theadHTML = "<tr style='border-bottom:2px solid #000;'>";
    q.categories.forEach(cat => {
-     theadHTML += `<th style="border:2px solid #000; padding:12px; font-size:1.1rem; width:33.33%;">${cat.name}</th>`;
+     theadHTML += `<th style="border:2px solid #000; background:var(--teal); color:#fff; padding:12px; font-size:1.15rem; width:33.33%;">${cat.name}</th>`;
    });
    theadHTML += "</tr>";
    
-   let tbodyHTML = "<tr style='border-bottom:2px solid #000;'>";
+   // صف المربعات الفارغة للكتابة داخلها
+   let inputRowHTML = "<tr style='border-bottom:2px solid #000;'>";
    q.categories.forEach(cat => {
-     tbodyHTML += `<td style="border:2px solid #000; padding:10px; vertical-align:middle; height:80px; background:#fff;"></td>`;
-   });
-   tbodyHTML += "</tr>";
-
-   // صف خانات الإدخال
-   let inputRowHTML = "<tr>";
-   q.categories.forEach(cat => {
-     inputRowHTML += `<td style="border:2px solid #000; padding:10px; vertical-align:middle; height:80px; background:#fff;">
-       <input type="text" class="table-input-cell" data-category="${cat.id}" placeholder="اكتب الأرقام" style="width:100%; height:100%; border:none; outline:none; text-align:center; font-size:1.2rem; font-weight:bold; background:transparent;" />
+     inputRowHTML += `<td style="border:2px solid #000; padding:10px; vertical-align:middle; height:90px; background:#fff;">
+       <input type="text" class="table-input-cell answer-textarea" data-category="${cat.id}" placeholder="اكتبي الأرقام هنا" style="width:100%; height:100%; border:none; outline:none; text-align:center; font-size:1.3rem; font-weight:bold; background:transparent;" />
      </td>`;
    });
    inputRowHTML += "</tr>";
    
-   table.innerHTML = theadHTML + tbodyHTML + inputRowHTML;
+   table.innerHTML = theadHTML + inputRowHTML;
    containerDiv.appendChild(table);
    answersContainer.appendChild(containerDiv);
 
    document.querySelectorAll(".table-input-cell").forEach(input => {
-     input.addEventListener("input", checkTableInputReady);
+     input.addEventListener("input", checkTextInputReady);
    });
 
  } else if(q.is_text_input) {
@@ -389,12 +383,6 @@ function renderQuestion(){
  startQuestionTimer();
 }
 
-function checkTableInputReady() {
-  const inputs = [...document.querySelectorAll(".table-input-cell")];
-  const allFilled = inputs.every(input => input.value.trim().length > 0);
-  $("checkBtn").disabled = !allFilled;
-}
-
 function checkTextInputReady() {
   const textareas = [...document.querySelectorAll(".answer-textarea")];
   const allFilled = textareas.every(ta => ta.value.trim().length > 0);
@@ -456,30 +444,21 @@ function checkAnswer(){
  const q = session.current;
  let isCorrect = false;
 
- if(q.is_table_input) {
+ if(q.id === "S4_005") {
    const inputs = document.querySelectorAll(".table-input-cell");
    let allCorrect = true;
 
-   inputs.forEach(input => {
-     const catId = input.dataset.category;
-     const val = input.value.trim();
-     // استخراج الأرقام المدخلة من قبل الطالبة
-     const typedNumbers = val.match(/[0-9٠-٩]+/g) || [];
+   inputs.forEach((input, idx) => {
+     const userVal = input.value.trim();
+     const acceptedList = q.per_input_answers[idx] || [];
      
-     // البحث عن العناصر الصحيحة لهذه الفئة
-     const expectedItems = q.draggable_items.filter(i => i.correct_category === catId);
-     const expectedNumbers = expectedItems.map(i => i.id.replace('item', ''));
+     // استخراج الأرقام من إدخال الطالبة
+     const userNums = userVal.match(/[0-9٠-٩]+/g) || [];
+     
+     const cellValid = userNums.every(num => acceptedList.includes(num)) && userNums.length > 0;
+     const hasAllExpected = acceptedList.some(acc => userNums.includes(acc));
 
-     // التحقق من أن جميع الأرقام المتوقعة موجودة ضمن مدخلات هذه الخلية
-     const matchesCategory = expectedNumbers.every(num => 
-       typedNumbers.some(tn => tn.includes(num))
-     );
-     // التأكد من عدم وجود أرقام خاطئة غريبة لا تنتمي لهذه الفئة
-     const noExtraWrongNumbers = typedNumbers.every(tn => 
-       expectedNumbers.some(en => tn.includes(en))
-     );
-
-     if(matchesCategory && noExtraWrongNumbers && typedNumbers.length > 0) {
+     if(cellValid && hasAllExpected) {
        input.style.color = "#087f5b";
        input.parentElement.style.background = "#e8f8ef";
      } else {
