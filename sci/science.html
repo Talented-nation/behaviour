@@ -158,7 +158,8 @@ function newSession(){
    correct: 0,
    skillWrongCounts: {},
    current: null,
-   shuffledOptions: []
+   shuffledOptions: [],
+   essayAnswers: [] // تجميع الإجابات المقالية
  };
  $("home").classList.add("hidden"); $("quiz").classList.remove("hidden");
  renderQuestion();
@@ -623,6 +624,15 @@ function checkAnswer(){
      const textareas = [...document.querySelectorAll(".answer-textarea")];
      const userAnswers = textareas.map(ta => ta.value.trim());
      
+     // حفظ الإجابة المقالية في الـ session
+     if (!q.is_number_input) {
+       session.essayAnswers.push({
+         questionId: q.id,
+         questionText: q.question || q.question_above || "سؤال كتابي",
+         userAnswer: userAnswers.join(" | ")
+       });
+     }
+
      const hasValidLength = q.is_number_input ? userAnswers.every(ans => ans.length > 0) : userAnswers.every(ans => ans.length >= 3);
      const uniqueAnswers = q.allow_duplicate_inputs ? true : (new Set(userAnswers).size === userAnswers.length);
      
@@ -648,15 +658,22 @@ function checkAnswer(){
    }
  } else if(q.is_complex) {
    const ta = document.querySelector(".complex-textarea");
-   const userAns = ta.value.trim();
+   const userAns = ta ? ta.value.trim() : "";
    const optionCorrect = session.selected === q.correct_answer;
+
+   // حفظ الإجابة المقالية للشرح في الـ session
+   session.essayAnswers.push({
+     questionId: q.id,
+     questionText: q.explanation_question || q.question || "شرح الإجابة",
+     userAnswer: userAns
+   });
 
    const accepted = q.accepted_answers.map(ans => ans.trim());
    const words = userAns.split(/\s+/);
    const textCorrect = words.some(word => word.length >= 3 && accepted.some(acc => acc.includes(word)));
 
    isCorrect = optionCorrect && textCorrect;
-   ta.disabled = true;
+   if(ta) ta.disabled = true;
 
    if(isCorrect) session.correct++;
    recordAnswer(isCorrect);
@@ -744,7 +761,8 @@ async function showResults(){
        section: session.cls,
        score: session.correct.toString(),
        total: total.toString(),
-       unmasteredSkills: unmasteredStr
+       unmasteredSkills: unmasteredStr,
+       essayAnswers: JSON.stringify(session.essayAnswers) // إرسال الإجابات المقالية
      })
    });
  } catch(e) {
