@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>غرفة الدراسة السحرية - تحدي الرياضيات</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Tahoma',sans-serif; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#1a0f2e; }
+  
+  .game-container { 
+    position:relative; 
+    width:100vw; 
+    height:100vh; 
+    overflow:hidden; 
+  }
+  .game-container img { 
+    width:100%; 
+    height:100%; 
+    object-fit:fill; 
+    display:block; 
+  }
+
+  .hotspot {
+    position:absolute; border-radius:50%; cursor:pointer;
+    min-width:38px; min-height:38px;
+    background:radial-gradient(circle, rgba(255,215,0,.45) 0%, rgba(255,140,0,.12) 70%);
+    border:2px solid rgba(255,215,0,.7);
+    animation:pulse 2s infinite; transition:transform .25s;
+  }
+  .hotspot:hover { transform:scale(1.18); background:radial-gradient(circle, rgba(255,215,0,.75) 0%, rgba(255,140,0,.3) 70%); }
+  .hotspot.solved { background:radial-gradient(circle, rgba(0,255,100,.5) 0%, rgba(0,200,100,.1) 70%); border-color:#00ff66; animation:none; }
+  .hotspot.solved::after { content:'✓'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#00ff66; font-size:22px; font-weight:bold; text-shadow:0 0 4px #000; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,.7);} 50%{box-shadow:0 0 0 14px rgba(255,215,0,0);} }
+
+  /* 10-Minute Countdown Timer in Bottom-Right Corner */
+  .timer-box {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 90;
+    background: linear-gradient(135deg, rgba(45, 27, 78, 0.92), rgba(26, 15, 46, 0.95));
+    border: 2px solid #ffd700;
+    border-radius: 14px;
+    padding: 8px 16px;
+    color: #ffd700;
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.3);
+    direction: ltr;
+    user-select: none;
+  }
+  .timer-box.warning {
+    border-color: #ff4444;
+    color: #ff5555;
+    animation: timerBlink 1s infinite;
+  }
+  @keyframes timerBlink {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255, 68, 68, 0.6); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 68, 68, 0.9); }
+  }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:linear-gradient(135deg,#2d1b4e,#1a0f2e); border:3px solid #ffd700; border-radius:20px; padding:28px; max-width:500px; width:90%; color:#fff; text-align:center; box-shadow:0 0 50px rgba(255,215,0,.5); animation:modalIn .35s ease; }
+  @keyframes modalIn { from{transform:scale(.6);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .modal h2 { color:#ffd700; margin-bottom:16px; font-size:1.6em; }
+  .question { font-size:1.4em; margin:18px 0; padding:14px; background:rgba(255,255,255,.1); border-radius:10px; border-right:4px solid #ffd700; line-height:1.6; }
+  .answer-input { width:80%; padding:12px; font-size:1.3em; border:2px solid #ffd700; border-radius:10px; background:#1a0f2e; color:#fff; text-align:center; margin:12px 0; }
+  .answer-input:focus { outline:none; box-shadow:0 0 15px #ffd700; }
+  .btn { padding:11px 28px; font-size:1.05em; border:none; border-radius:25px; cursor:pointer; margin:5px; font-weight:bold; transition:transform .2s; }
+  .btn:hover { transform:scale(1.05); }
+  .btn-check { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#1a0f2e; }
+  .btn-close { background:#555; color:#fff; }
+  .feedback { margin-top:14px; font-size:1.25em; font-weight:bold; min-height:28px; }
+  .feedback.correct { color:#00ff66; } .feedback.wrong { color:#ff5555; }
+
+  .win-message { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:200; justify-content:center; align-items:center; flex-direction:column; color:#ffd700; text-align:center; padding:20px; }
+  .win-message.active { display:flex; }
+  .win-message h1 { font-size:2.6em; margin-bottom:14px; }
+  .win-message p { font-size:1.35em; color:#fff; }
+
+  /* Magical Key Reward Animation & Styling */
+  .key-reward {
+    width: 145px;
+    max-width: 42vw;
+    margin: 18px 0 10px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.85));
+    animation: floatKey 2.4s ease-in-out infinite;
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+  .key-reward:hover {
+    transform: scale(1.12) rotate(-6deg);
+    filter: drop-shadow(0 0 32px rgba(255, 215, 0, 1));
+  }
+  @keyframes floatKey {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(4deg); }
+  }
+  .btn-enter-room {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    color: #100921;
+    font-size: 1.2em;
+    padding: 13px 32px;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.55);
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <img src="https://talented-nation.github.io/behaviour/fun/pics/studyroom.png" alt="غرفة الدراسة السحرية">
+
+  <div class="hotspot" style="top:8%;left:7%;width:20%;height:40%;" data-q="0"></div>
+  <div class="hotspot" style="top:16%;left:33%;width:16%;height:11%;" data-q="1"></div>
+  <div class="hotspot" style="top:28%;left:53.5%;width:5%;height:9%;" data-q="2"></div>
+  <div class="hotspot" style="top:27%;left:61.5%;width:5%;height:10%;" data-q="3"></div>
+  <div class="hotspot" style="top:37%;left:64.5%;width:6%;height:10%;" data-q="4"></div>
+  <div class="hotspot" style="top:42%;left:26%;width:6%;height:17%;" data-q="5"></div>
+  <div class="hotspot" style="top:50%;left:8%;width:9%;height:14%;" data-q="6"></div>
+  <div class="hotspot" style="top:56%;left:17%;width:16%;height:13%;" data-q="7"></div>
+  <div class="hotspot" style="top:48%;left:48%;width:24%;height:45%;" data-q="8"></div>
+  <div class="hotspot" style="top:2%;left:79%;width:19%;height:76%;" data-q="9"></div>
+</div>
+
+<!-- Countdown Timer -->
+<div class="timer-box" id="timerBox">
+  <span>⏳</span>
+  <span id="timerDisplay">10:00</span>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <div class="question" id="questionText"></div>
+    <input type="number" class="answer-input" id="answerInput" placeholder="اكتب إجابتك هنا">
+    <br>
+    <button class="btn btn-check" onclick="checkAnswer()">تحقق ✓</button>
+    <button class="btn btn-close" onclick="closeModal()">إغلاق ✕</button>
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+
+<div class="win-message" id="winMessage">
+  <h1>🎉 مبروك أيها الساحر الصغير! 🎉</h1>
+  <p>أجبت على جميع الأسئلة العشرة بنجاح وحصلت على المفتاح السحري!</p>
+  <img src="https://talented-nation.github.io/behaviour/key.png" alt="المفتاح السحري" class="key-reward" onclick="enterNextRoom()" title="اضغط لفتح الغرفة التالية">
+  <p style="font-size:1.15em; color:#ffd700; margin-bottom:14px;">🔑 استخدم المفتاح لفتح الباب والانتقال إلى الغرفة التالية</p>
+  <div>
+    <button class="btn btn-enter-room" id="enterRoomBtn" onclick="enterNextRoom()">افتح الباب وادخل الغرفة التالية 🚪✨</button>
+    <button class="btn btn-close" onclick="location.reload()">العب مرة أخرى 🔄</button>
+  </div>
+</div>
+
+<div class="win-message" id="timeUpMessage">
+  <h1 style="color:#ff5555;">⌛ انتهى الوقت! ⌛</h1>
+  <p id="finalScoreText"></p>
+  <button class="btn btn-check" style="margin-top:26px;" onclick="location.reload()">حاول مرة أخرى 🔄</button>
+</div>
+
+<audio id="correctSound" src="https://talented-nation.github.io/behaviour/correct.mp3" preload="auto"></audio>
+<audio id="hooraySound" src="https://talented-nation.github.io/behaviour/hooray.mp3" preload="auto"></audio>
+<audio id="doorSound" src="https://talented-nation.github.io/behaviour/door.mp3" preload="auto"></audio>
+
+<script>
+// ضع رابط صفحة الغرفة التالية هنا عند جاهزيتها
+const NEXT_ROOM_URL = "next-room.html";
+
+const questions = [
+  { title:"🗺️ الخريطة", q:"المسافة من القرية إلى القلعة على الخريطة 350 كم. قطع الساحر 175 كم. كم كيلومترًا تبقى له؟", a:175 },
+  { title:"📚 رف الكتب", q:"على الرفّ 6 صفوف، وفي كل صفّ 9 كتب. كم كتابًا على الرفّ؟", a:54 },
+  { title:"⏳ الساعة الرملية", q:"تفرغ الساعة الرملية كل 5 دقائق. كم مرة تفرغ في ساعة كاملة (60 دقيقة)؟", a:12 },
+  { title:"🧪 القارورة", q:"في القارورة 100 مل من الإكسير، استخدم الساحر 35 مل. كم ملّ بقيت؟", a:65 },
+  { title:"🧭 الإسطرلاب", q:"اتّجه الساحر شمالًا 120 مترًا ثم شرقًا 85 مترًا. ما مجموع المسافة التي قطعها؟", a:205 },
+  { title:"🏮 الفنر", q:"يضيء الفنر 8 ساعات يوميًا. كم ساعة يضيء في أسبوع (7 أيام)؟", a:56 },
+  { title:"🪶 الريشة", q:"كتب الساحر 6 رسائل، وكل رسالة تحتاج 4 أوراق. كم ورقة استعمل؟", a:24 },
+  { title:"📖 الكتاب السحري", q:"كان في المكتبة 245 كتابًا، أهدى الساحر منها 78 كتابًا. كم كتابًا بقي؟", a:167 },
+  { title:"🪑 الكرسي", q:"ظهر الكرسي على شكل مستطيل طوله 50 سم وعرضه 30 سم. ما محيطه؟", a:160 },
+  { title:"🪟 النافذة", q:"في النافذة قطعة زجاج مربعة طول ضلعها 9 سم. ما مساحتها بالسنتيمتر المربع؟", a:81 }
+];
+
+let currentQ = null;
+let isEnteringRoom = false;
+const solved = new Set();
+const correctSound = document.getElementById('correctSound');
+const hooraySound = document.getElementById('hooraySound');
+const doorSound = document.getElementById('doorSound');
+
+// 10-Minute Timer Logic
+let timeLeft = 10 * 60; // 600 seconds
+const timerDisplay = document.getElementById('timerDisplay');
+const timerBox = document.getElementById('timerBox');
+
+const timerInterval = setInterval(() => {
+  if (solved.size === 10) {
+    clearInterval(timerInterval);
+    return;
+  }
+
+  timeLeft--;
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  if (timeLeft <= 60) {
+    timerBox.classList.add('warning');
+  }
+
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    closeModal();
+    document.getElementById('finalScoreText').textContent = `لقد أجبت على ${solved.size} من 10 أسئلة!`;
+    document.getElementById('timeUpMessage').classList.add('active');
+  }
+}, 1000);
+
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', () => {
+    const idx = +h.dataset.q;
+    if (h.classList.contains('solved')) return;
+    currentQ = idx;
+    document.getElementById('modalTitle').textContent = questions[idx].title;
+    document.getElementById('questionText').textContent = questions[idx].q;
+    document.getElementById('answerInput').value = '';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('modal').classList.add('active');
+    setTimeout(()=>document.getElementById('answerInput').focus(),120);
+  });
+});
+
+function checkAnswer(){
+  const v = parseInt(document.getElementById('answerInput').value,10);
+  const fb = document.getElementById('feedback');
+  if (isNaN(v)) { fb.textContent='⚠️ أدخل رقمًا صحيحًا'; fb.className='feedback wrong'; return; }
+  if (v === questions[currentQ].a) {
+    correctSound.currentTime = 0;
+    correctSound.play().catch(() => {});
+    fb.textContent='✅ إجابة صحيحة! أحسنت 🌟'; fb.className='feedback correct';
+    solved.add(currentQ);
+    document.querySelector('.hotspot[data-q="'+currentQ+'"]').classList.add('solved');
+    setTimeout(closeModal, 1400);
+    if (solved.size === 10) {
+      clearInterval(timerInterval);
+      setTimeout(() => {
+        document.getElementById('winMessage').classList.add('active');
+        hooraySound.currentTime = 0;
+        hooraySound.play().catch(() => {});
+      }, 600);
+    }
+  } else {
+    fb.textContent='❌ حاول مرة أخرى!'; fb.className='feedback wrong';
+  }
+}
+
+function enterNextRoom() {
+  if (isEnteringRoom) return;
+  isEnteringRoom = true;
+
+  const btn = document.getElementById('enterRoomBtn');
+  if (btn) btn.disabled = true;
+
+  const navigate = () => {
+    window.location.href = NEXT_ROOM_URL;
+  };
+
+  doorSound.currentTime = 0;
+  doorSound.onended = navigate;
+  doorSound.onerror = navigate;
+
+  doorSound.play().catch(navigate);
+  // Fallback in case the audio takes too long or fails to fire 'ended'
+  setTimeout(navigate, 2500);
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('active'); }
+document.getElementById('answerInput').addEventListener('keypress', e=>{ if(e.key==='Enter') checkAnswer(); });
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+</script>
+</body>
+</html>

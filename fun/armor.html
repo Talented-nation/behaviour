@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>غرفة الدروع الملكية - تحدي الرياضيات (المرحلة الثانية)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Tahoma',sans-serif; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#141824; }
+  
+  .game-container { 
+    position:relative; 
+    width:100vw; 
+    height:100vh; 
+    overflow:hidden;
+    direction:ltr;
+  }
+  .game-container img { 
+    width:100%; 
+    height:100%; 
+    object-fit:fill; 
+    display:block; 
+  }
+
+  .hotspot {
+    position:absolute;
+    direction:ltr;
+    transform:translate(-50%, -50%);
+    border-radius:50%;
+    cursor:pointer;
+    background:radial-gradient(circle, rgba(255,215,0,.55) 0%, rgba(255,140,0,.18) 70%);
+    border:2px solid rgba(255,215,0,.9);
+    animation:pulse 2s infinite;
+    transition:transform .25s, background .25s;
+  }
+  .hotspot:hover {
+    transform:translate(-50%, -50%) scale(1.16);
+    background:radial-gradient(circle, rgba(255,215,0,.85) 0%, rgba(255,140,0,.35) 70%);
+  }
+  .hotspot.solved {
+    background:radial-gradient(circle, rgba(0,255,100,.55) 0%, rgba(0,200,100,.14) 70%);
+    border-color:#00ff66;
+    animation:none;
+  }
+  .hotspot.solved::after {
+    content:'✓';
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:#00ff66;
+    font-size:20px;
+    font-weight:bold;
+    text-shadow:0 0 4px #000;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,.75);}
+    50%{box-shadow:0 0 0 11px rgba(255,215,0,0);}
+  }
+
+  /* Optional coordinate helper badge (enabled via ?edit=1 or Ctrl/Cmd + E) */
+  .coord-helper {
+    display:none;
+    position:fixed;
+    top:14px;
+    left:14px;
+    z-index:150;
+    background:rgba(15, 20, 32, 0.92);
+    color:#ffd700;
+    border:1px solid #ffd700;
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:12px;
+    direction:ltr;
+    font-family:monospace;
+  }
+  .coord-helper.active { display:block; }
+
+  /* 10-Minute Countdown Timer in Bottom-Right Corner */
+  .timer-box {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 90;
+    background: linear-gradient(135deg, rgba(30, 38, 56, 0.92), rgba(18, 22, 34, 0.95));
+    border: 2px solid #ffd700;
+    border-radius: 14px;
+    padding: 8px 16px;
+    color: #ffd700;
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.3);
+    direction: ltr;
+    user-select: none;
+  }
+  .timer-box.warning {
+    border-color: #ff4444;
+    color: #ff5555;
+    animation: timerBlink 1s infinite;
+  }
+  @keyframes timerBlink {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255, 68, 68, 0.6); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 68, 68, 0.9); }
+  }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; justify-content:center; align-items:center; direction:rtl; padding: 12px; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:linear-gradient(135deg,#252e42,#141824); border:3px solid #ffd700; border-radius:20px; padding:24px; max-width:540px; width:95%; max-height:95vh; overflow-y:auto; color:#fff; text-align:center; box-shadow:0 0 50px rgba(255,215,0,.5); animation:modalIn .35s ease; }
+  
+  /* Expanded modal size when question has an image */
+  .modal.has-image {
+    max-width: 780px;
+    padding: 20px 24px;
+  }
+
+  @keyframes modalIn { from{transform:scale(.6);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .modal h2 { color:#ffd700; margin-bottom:12px; font-size:1.55em; }
+  .question { font-size:1.3em; margin:10px 0 14px; padding:14px; background:rgba(255,255,255,.1); border-radius:10px; border-right:4px solid #ffd700; line-height:1.6; }
+  
+  /* Full-width, crisp image styling */
+  .question.image-mode {
+    padding: 10px;
+    border-right: none;
+    border: 2px solid rgba(255, 215, 0, 0.45);
+  }
+  .question-img {
+    width: 100%;
+    max-height: 46vh;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 8px auto 0;
+    display: block;
+    background: #fff;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+  }
+  .question-img:hover {
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.5);
+  }
+  .zoom-hint {
+    font-size: 0.78em;
+    color: #ffd700;
+    margin-top: 6px;
+    opacity: 0.9;
+  }
+
+  /* Fullscreen Lightbox for Image Zoom */
+  .lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.94);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    cursor: zoom-out;
+  }
+  .lightbox-overlay.active {
+    display: flex;
+  }
+  .lightbox-overlay img {
+    max-width: 96vw;
+    max-height: 92vh;
+    border: 3px solid #ffd700;
+    border-radius: 12px;
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.6);
+    background: #fff;
+  }
+  
+  /* Multiple Choice Options */
+  .choices-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 14px 0 8px;
+  }
+  .choice-btn {
+    padding: 12px 16px;
+    font-size: 1.3em;
+    font-weight: bold;
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    background: #141824;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .choice-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  .choice-btn.selected {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #141824;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.7);
+  }
+
+  .answer-input { width:80%; padding:12px; font-size:1.3em; border:2px solid #ffd700; border-radius:10px; background:#141824; color:#fff; text-align:center; margin:12px 0; }
+  .answer-input:focus { outline:none; box-shadow:0 0 15px #ffd700; }
+  .btn { padding:11px 28px; font-size:1.05em; border:none; border-radius:25px; cursor:pointer; margin:5px; font-weight:bold; transition:transform .2s; }
+  .btn:hover { transform:scale(1.05); }
+  .btn-check { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#141824; }
+  .btn-close { background:#555; color:#fff; }
+  .feedback { margin-top:10px; font-size:1.25em; font-weight:bold; min-height:26px; }
+  .feedback.correct { color:#00ff66; } .feedback.wrong { color:#ff5555; }
+
+  .win-message { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:200; justify-content:center; align-items:center; flex-direction:column; color:#ffd700; text-align:center; padding:20px; direction:rtl; }
+  .win-message.active { display:flex; }
+  .win-message h1 { font-size:2.6em; margin-bottom:14px; }
+  .win-message p { font-size:1.35em; color:#fff; }
+
+  /* Magical Key Reward Animation & Styling */
+  .key-reward {
+    width: 145px;
+    max-width: 42vw;
+    margin: 18px 0 10px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.85));
+    animation: floatKey 2.4s ease-in-out infinite;
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+  .key-reward:hover {
+    transform: scale(1.12) rotate(-6deg);
+    filter: drop-shadow(0 0 32px rgba(255, 215, 0, 1));
+  }
+  @keyframes floatKey {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(4deg); }
+  }
+  .btn-enter-room {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    color: #100921;
+    font-size: 1.2em;
+    padding: 13px 32px;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.55);
+  }
+</style>
+</head>
+<body>
+
+<div class="coord-helper" id="coordHelper">Edit Mode: Click image to copy top/left %</div>
+
+<div class="game-container" id="gameContainer">
+  <img src="https://talented-nation.github.io/behaviour/fun/pics/armor.jpeg" alt="غرفة الدروع الملكية" id="roomBg">
+
+  <!-- 10 Hotspots updated to match the red markers & wooden table -->
+  <div class="hotspot" style="top:21.5%;left:14.5%;width:48px;height:48px;" data-q="0" title="درع الأسد على الحائط"></div>
+  <div class="hotspot" style="top:57%;left:74.5%;width:48px;height:48px;" data-q="1" title="الخوذة خلف الصندوق"></div>
+  <div class="hotspot" style="top:49%;left:26.5%;width:54px;height:54px;" data-q="2" title="درع الفارس الفولاذي"></div>
+  <div class="hotspot" style="top:29.5%;left:38.8%;width:48px;height:48px;" data-q="3" title="الشعلة المضيئة"></div>
+  <div class="hotspot" style="top:84%;left:32%;width:54px;height:54px;" data-q="4" title="المخطوطة على الطاولة"></div>
+  <div class="hotspot" style="top:64%;left:52%;width:52px;height:52px;" data-q="5" title="حامل السيوف الأوسط"></div>
+  <div class="hotspot" style="top:31.5%;left:68.5%;width:58px;height:58px;" data-q="6" title="رف الرماح والسيوف الجداري"></div>
+  <div class="hotspot" style="top:51%;left:67%;width:54px;height:54px;" data-q="7" title="صندوق الأسلحة المفتوح"></div>
+  <div class="hotspot" style="top:83.5%;left:70%;width:56px;height:56px;" data-q="8" title="صندوق الكنوز السفلي"></div>
+  <div class="hotspot" style="top:88.5%;left:43%;width:56px;height:56px;" data-q="9" title="الطاولة الخشبية"></div>
+</div>
+
+<!-- Countdown Timer -->
+<div class="timer-box" id="timerBox">
+  <span>⏳</span>
+  <span id="timerDisplay">10:00</span>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalBox">
+    <h2 id="modalTitle"></h2>
+    <div class="question" id="questionBox">
+      <div id="questionText"></div>
+      <img id="questionImage" class="question-img" src="" alt="صورة السؤال" style="display:none;" onclick="openLightbox(this.src)" title="اضغط لتكبير الصورة">
+      <div id="zoomHint" class="zoom-hint" style="display:none;">🔍 اضغط على الصورة لتكبيرها بملء الشاشة</div>
+    </div>
+    
+    <!-- Text input for standard questions -->
+    <input type="number" class="answer-input" id="answerInput" placeholder="اكتب إجابتك هنا">
+    
+    <!-- Multiple choices container -->
+    <div class="choices-grid" id="choicesContainer" style="display:none;"></div>
+    
+    <button class="btn btn-check" onclick="checkAnswer()">تحقق ✓</button>
+    <button class="btn btn-close" onclick="closeModal()">إغلاق ✕</button>
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+
+<!-- Lightbox for full-screen zoom -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="صورة السؤال مكبرة">
+</div>
+
+<div class="win-message" id="winMessage">
+  <h1>🎉 أحسنت أيها الساحر! 🎉</h1>
+  <p>اجتزت تحدي غرفة الدروع بنجاح وحصلت على المفتاح الثاني!</p>
+  <img src="https://talented-nation.github.io/behaviour/key.png" alt="المفتاح السحري" class="key-reward" onclick="enterNextRoom()" title="اضغط لفتح الغرفة التالية">
+  <p style="font-size:1.15em; color:#ffd700; margin-bottom:14px;">🔑 استخدم المفتاح لفتح الباب والانتقال إلى الغرفة الثالثة</p>
+  <div>
+    <button class="btn btn-enter-room" id="enterRoomBtn" onclick="enterNextRoom()">افتح الباب وادخل الغرفة التالية 🚪✨</button>
+    <button class="btn btn-close" onclick="location.reload()">العب مرة أخرى 🔄</button>
+  </div>
+</div>
+
+<div class="win-message" id="timeUpMessage">
+  <h1 style="color:#ff5555;">⌛ انتهى الوقت! ⌛</h1>
+  <p id="finalScoreText"></p>
+  <button class="btn btn-check" style="margin-top:26px;" onclick="location.reload()">حاول مرة أخرى 🔄</button>
+</div>
+
+<audio id="correctSound" src="https://talented-nation.github.io/behaviour/correct.mp3" preload="auto"></audio>
+<audio id="hooraySound" src="https://talented-nation.github.io/behaviour/hooray.mp3" preload="auto"></audio>
+<audio id="doorSound" src="https://talented-nation.github.io/behaviour/door.mp3" preload="auto"></audio>
+<audio id="loseSound" src="https://talented-nation.github.io/behaviour/lose.mp3" preload="auto"></audio>
+<audio id="timeTickSound" src="https://talented-nation.github.io/behaviour/timetick.mp3" preload="auto" loop></audio>
+
+<script>
+// ضع رابط صفحة الغرفة الثالثة هنا عند جاهزيتها
+const NEXT_ROOM_URL = "room3.html";
+
+const questions = [
+  { 
+    title:"🦁 درع الأسد", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q6.png",
+    choices: [
+      { label: "أ- ٢٠ سم", value: 20 },
+      { label: "ب- ٣٤ سم", value: 34 },
+      { label: "ج- ٢٢ سم", value: 22 },
+      { label: "د- ٣٠ سم", value: 30 }
+    ],
+    a:30 
+  },
+  { title:"🪖 الخوذة الفولاذية", q:"تحتوي الخوذة الفولاذية على 48 مسمارًا معدنيًا موزعة بالتساوي على 6 صفوف. كم مسمارًا في كل صف؟", a:8 },
+  { 
+    title:"🛡️ درع الفارس الفولاذي", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q8.png",
+    choices: [
+      { label: "أ- ٥٢٥", value: 525 },
+      { label: "ب- ٢٤٥", value: 245 },
+      { label: "ج- ١٥٥", value: 155 },
+      { label: "د- ٢٥٦", value: 256 }
+    ],
+    a:155 
+  },
+  { 
+    title:"🔥 الشعلة المضيئة", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q9.png",
+    choices: [
+      { label: "أ- ٤ وحدات", value: 4 },
+      { label: "ب- ٥ وحدات", value: 5 },
+      { label: "ج- ٦ وحدات", value: 6 },
+      { label: "د- ٧ وحدات", value: 7 }
+    ],
+    a:5 
+  },
+  { 
+    title:"📜 المخطوطة على الطاولة", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q1.png",
+    choices: [
+      { label: "أ- ٣", value: 3 },
+      { label: "ب- ٤", value: 4 },
+      { label: "ج- ٥", value: 5 },
+      { label: "د- ٦", value: 6 }
+    ],
+    a:3 
+  },
+  { 
+    title:"🗡️ حامل السيوف الأوسط", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q3.png",
+    choices: [
+      { label: "أ- ٢١٠", value: 210 },
+      { label: "ب- ٢٥٠", value: 250 },
+      { label: "ج- ٣٠٠", value: 300 },
+      { label: "د- ٤٠٠", value: 400 }
+    ],
+    a:250 
+  },
+  { title:"🏹 رف الرماح والسيوف", q:"تُفتح خزانة الأسلحة بإدخال عدد يساوي نصف العدد 360. ما هو الرقم السري؟", a:180 },
+  { 
+    title:"🧰 صندوق الأسلحة المفتوح", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q7.png",
+    choices: [
+      { label: "أ- ٩ كتب", value: 9 },
+      { label: "ب- ١٤ كتاب", value: 14 },
+      { label: "ج- ١٢ كتاب", value: 12 },
+      { label: "د- ١٠ كتب", value: 10 }
+    ],
+    a:12 
+  },
+  { 
+    title:"💎 صندوق الكنوز السفلي", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:", 
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q2.png",
+    choices: [
+      { label: "أ- ٦", value: 6 },
+      { label: "ب- ١٢", value: 12 },
+      { label: "ج- ١٨", value: 18 },
+      { label: "د- ٣٠", value: 30 }
+    ],
+    a:30 
+  },
+  { 
+    title:"🪵 الطاولة الخشبية", 
+    q:"اختر الإجابة الصحيحة للسؤال الموضح في الصورة:",
+    img:"https://talented-nation.github.io/behaviour/fun/mathpixel/q4.png",
+    choices: [
+      { label: "أ- ٣٠٢", value: 302 },
+      { label: "ب- ٣١٠", value: 310 },
+      { label: "ج- ٣٢٠", value: 320 },
+      { label: "د- ٣٤٠", value: 340 }
+    ],
+    a:340 
+  }
+];
+
+let currentQ = null;
+let selectedChoice = null;
+let isEnteringRoom = false;
+let tickStarted = false;
+const solved = new Set();
+const correctSound = document.getElementById('correctSound');
+const hooraySound = document.getElementById('hooraySound');
+const doorSound = document.getElementById('doorSound');
+const loseSound = document.getElementById('loseSound');
+const timeTickSound = document.getElementById('timeTickSound');
+
+function stopTimeTick() {
+  timeTickSound.pause();
+  timeTickSound.currentTime = 0;
+}
+
+function openLightbox(src) {
+  if (!src) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+
+// 10-Minute Timer Logic
+let timeLeft = 10 * 60; // 600 seconds
+const timerDisplay = document.getElementById('timerDisplay');
+const timerBox = document.getElementById('timerBox');
+
+const timerInterval = setInterval(() => {
+  if (solved.size === 10) {
+    clearInterval(timerInterval);
+    stopTimeTick();
+    return;
+  }
+
+  timeLeft--;
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  if (timeLeft <= 2 * 60 && timeLeft > 0 && !tickStarted) {
+    tickStarted = true;
+    timeTickSound.currentTime = 0;
+    timeTickSound.play().catch(() => {});
+  }
+
+  if (timeLeft <= 60) {
+    timerBox.classList.add('warning');
+  }
+
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    stopTimeTick();
+    closeLightbox();
+    closeModal();
+    document.getElementById('finalScoreText').textContent = `لقد أجبت على ${solved.size} من 10 أسئلة!`;
+    document.getElementById('timeUpMessage').classList.add('active');
+    loseSound.currentTime = 0;
+    loseSound.play().catch(() => {});
+  }
+}, 1000);
+
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', () => {
+    const idx = +h.dataset.q;
+    if (h.classList.contains('solved')) return;
+    currentQ = idx;
+    selectedChoice = null;
+
+    const item = questions[idx];
+    const modalBox = document.getElementById('modalBox');
+    const qBox = document.getElementById('questionBox');
+    const qImg = document.getElementById('questionImage');
+    const zoomHint = document.getElementById('zoomHint');
+
+    document.getElementById('modalTitle').textContent = item.title;
+    document.getElementById('questionText').textContent = item.q;
+
+    if (item.img) {
+      modalBox.classList.add('has-image');
+      qBox.classList.add('image-mode');
+      qImg.src = item.img;
+      qImg.style.display = 'block';
+      zoomHint.style.display = 'block';
+    } else {
+      modalBox.classList.remove('has-image');
+      qBox.classList.remove('image-mode');
+      qImg.style.display = 'none';
+      zoomHint.style.display = 'none';
+      qImg.src = '';
+    }
+
+    const ansInput = document.getElementById('answerInput');
+    const choicesBox = document.getElementById('choicesContainer');
+
+    if (item.choices && item.choices.length > 0) {
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'grid';
+      choicesBox.innerHTML = '';
+
+      item.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'choice-btn';
+        btn.textContent = choice.label;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedChoice = choice.value;
+        });
+        choicesBox.appendChild(btn);
+      });
+    } else {
+      choicesBox.style.display = 'none';
+      choicesBox.innerHTML = '';
+      ansInput.style.display = 'inline-block';
+      ansInput.value = '';
+      setTimeout(() => ansInput.focus(), 120);
+    }
+
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('modal').classList.add('active');
+  });
+});
+
+function checkAnswer(){
+  const item = questions[currentQ];
+  const fb = document.getElementById('feedback');
+  let v;
+
+  if (item.choices && item.choices.length > 0) {
+    if (selectedChoice === null) {
+      fb.textContent = '⚠️ اختر إحدى الإجابات أولًا';
+      fb.className = 'feedback wrong';
+      return;
+    }
+    v = selectedChoice;
+  } else {
+    v = parseInt(document.getElementById('answerInput').value, 10);
+    if (isNaN(v)) {
+      fb.textContent = '⚠️ أدخل رقمًا صحيحًا';
+      fb.className = 'feedback wrong';
+      return;
+    }
+  }
+
+  if (v === item.a) {
+    correctSound.currentTime = 0;
+    correctSound.play().catch(() => {});
+    fb.textContent='✅ إجابة صحيحة! أحسنت 🌟'; fb.className='feedback correct';
+    solved.add(currentQ);
+    document.querySelector('.hotspot[data-q="'+currentQ+'"]').classList.add('solved');
+    setTimeout(closeModal, 1400);
+    if (solved.size === 10) {
+      clearInterval(timerInterval);
+      stopTimeTick();
+      setTimeout(() => {
+        document.getElementById('winMessage').classList.add('active');
+        hooraySound.currentTime = 0;
+        hooraySound.play().catch(() => {});
+      }, 600);
+    }
+  } else {
+    fb.textContent='❌ حاول مرة أخرى!'; fb.className='feedback wrong';
+  }
+}
+
+function enterNextRoom() {
+  if (isEnteringRoom) return;
+  isEnteringRoom = true;
+  stopTimeTick();
+
+  const btn = document.getElementById('enterRoomBtn');
+  if (btn) btn.disabled = true;
+
+  const navigate = () => {
+    window.location.href = NEXT_ROOM_URL;
+  };
+
+  doorSound.currentTime = 0;
+  doorSound.onended = navigate;
+  doorSound.onerror = navigate;
+
+  doorSound.play().catch(navigate);
+  setTimeout(navigate, 2500);
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('active'); }
+document.getElementById('answerInput').addEventListener('keypress', e=>{ if(e.key==='Enter') checkAnswer(); });
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+// Optional coordinate helper for fine-tuning hotspot positions: add ?edit=1 or press Ctrl/Cmd + E
+const coordHelper = document.getElementById('coordHelper');
+let editMode = new URLSearchParams(location.search).get('edit') === '1';
+if (editMode) coordHelper.classList.add('active');
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+    e.preventDefault();
+    editMode = !editMode;
+    coordHelper.classList.toggle('active', editMode);
+  }
+});
+
+document.getElementById('gameContainer').addEventListener('click', e => {
+  if (!editMode || e.target.classList.contains('hotspot')) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const leftPct = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+  const topPct = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+  const snippet = `top:${topPct}%;left:${leftPct}%;`;
+  coordHelper.textContent = `Copied: ${snippet}`;
+  navigator.clipboard?.writeText(snippet).catch(() => {});
+});
+</script>
+</body>
+</html>

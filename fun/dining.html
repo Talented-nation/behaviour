@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>غرفة الطعام الملكية - تحدي الرياضيات (المرحلة الثالثة)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Tahoma',sans-serif; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#141824; }
+  
+  .game-container { 
+    position:relative; 
+    width:100vw; 
+    height:100vh; 
+    overflow:hidden;
+    direction:ltr;
+  }
+  .game-container img { 
+    width:100%; 
+    height:100%; 
+    object-fit:fill; 
+    display:block; 
+  }
+
+  .hotspot {
+    position:absolute;
+    direction:ltr;
+    transform:translate(-50%, -50%);
+    border-radius:50%;
+    cursor:pointer;
+    background:radial-gradient(circle, rgba(255,215,0,.55) 0%, rgba(255,140,0,.18) 70%);
+    border:2px solid rgba(255,215,0,.9);
+    animation:pulse 2s infinite;
+    transition:transform .25s, background .25s;
+  }
+  .hotspot:hover {
+    transform:translate(-50%, -50%) scale(1.16);
+    background:radial-gradient(circle, rgba(255,215,0,.85) 0%, rgba(255,140,0,.35) 70%);
+  }
+  .hotspot.solved {
+    background:radial-gradient(circle, rgba(0,255,100,.55) 0%, rgba(0,200,100,.14) 70%);
+    border-color:#00ff66;
+    animation:none;
+  }
+  .hotspot.solved::after {
+    content:'✓';
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:#00ff66;
+    font-size:20px;
+    font-weight:bold;
+    text-shadow:0 0 4px #000;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,.75);}
+    50%{box-shadow:0 0 0 11px rgba(255,215,0,0);}
+  }
+
+  /* Optional coordinate helper badge (enabled via ?edit=1 or Ctrl/Cmd + E) */
+  .coord-helper {
+    display:none;
+    position:fixed;
+    top:14px;
+    left:14px;
+    z-index:150;
+    background:rgba(15, 20, 32, 0.92);
+    color:#ffd700;
+    border:1px solid #ffd700;
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:12px;
+    direction:ltr;
+    font-family:monospace;
+  }
+  .coord-helper.active { display:block; }
+
+  /* 10-Minute Countdown Timer in Bottom-Right Corner */
+  .timer-box {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 90;
+    background: linear-gradient(135deg, rgba(30, 38, 56, 0.92), rgba(18, 22, 34, 0.95));
+    border: 2px solid #ffd700;
+    border-radius: 14px;
+    padding: 8px 16px;
+    color: #ffd700;
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.3);
+    direction: ltr;
+    user-select: none;
+  }
+  .timer-box.warning {
+    border-color: #ff4444;
+    color: #ff5555;
+    animation: timerBlink 1s infinite;
+  }
+  @keyframes timerBlink {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(255, 68, 68, 0.6); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 68, 68, 0.9); }
+  }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; justify-content:center; align-items:center; direction:rtl; padding: 12px; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:linear-gradient(135deg,#252e42,#141824); border:3px solid #ffd700; border-radius:20px; padding:24px; max-width:540px; width:95%; max-height:95vh; overflow-y:auto; color:#fff; text-align:center; box-shadow:0 0 50px rgba(255,215,0,.5); animation:modalIn .35s ease; }
+  
+  /* Expanded modal size when question has an image, factor grid, card matching grid, ordering, or place value challenge */
+  /* Algebra & Patterns 4-Stage Challenge Styling */
+  .modal.has-algebra {
+    max-width: 780px;
+    padding: 20px 24px;
+  }
+  .modal.has-image, .modal.has-factors, .modal.has-matching, .modal.has-ordering, .modal.has-placevalue, .modal.has-algebra {
+    max-width: 780px;
+    padding: 20px 24px;
+  }
+
+  @keyframes modalIn { from{transform:scale(.6);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .modal h2 { color:#ffd700; margin-bottom:12px; font-size:1.55em; }
+  .question { font-size:1.3em; margin:10px 0 14px; padding:14px; background:rgba(255,255,255,.1); border-radius:10px; border-right:4px solid #ffd700; line-height:1.6; }
+  
+  /* Full-width, crisp image styling */
+  .question.image-mode {
+    padding: 10px;
+    border-right: none;
+    border: 2px solid rgba(255, 215, 0, 0.45);
+  }
+  .question-img {
+    width: 100%;
+    max-height: 46vh;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 8px auto 0;
+    display: block;
+    background: #fff;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+  }
+  .question-img:hover {
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.5);
+  }
+  .zoom-hint {
+    font-size: 0.78em;
+    color: #ffd700;
+    margin-top: 6px;
+    opacity: 0.9;
+  }
+
+  /* Fullscreen Lightbox for Image Zoom */
+  .lightbox-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.94);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    cursor: zoom-out;
+  }
+  .lightbox-overlay.active {
+    display: flex;
+  }
+  .lightbox-overlay img {
+    max-width: 96vw;
+    max-height: 92vh;
+    border: 3px solid #ffd700;
+    border-radius: 12px;
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.6);
+    background: #fff;
+  }
+  
+  /* Multiple Choice Options */
+  .choices-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 14px 0 8px;
+  }
+  .choice-btn {
+    padding: 12px 16px;
+    font-size: 1.3em;
+    font-weight: bold;
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    background: #141824;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .choice-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  .choice-btn.selected {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #141824;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.7);
+  }
+
+  /* Stage Pills (used in Factors, Ordering, and Place Value challenges) */
+  .factor-stage-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 10px;
+    flex-wrap: wrap;
+  }
+  .stage-pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    color: #ddd;
+  }
+  .stage-pill.active {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #141824;
+    border-color: #ffd700;
+  }
+  .stage-pill.done {
+    background: rgba(0, 255, 102, 0.18);
+    color: #00ff66;
+    border-color: #00ff66;
+  }
+
+  /* Place Value 5-Stage Challenge Styling */
+  .pv-question-card {
+    font-size: 1.32em;
+    font-weight: bold;
+    color: #fff;
+    background: rgba(255, 215, 0, 0.11);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 10px 0 14px;
+    line-height: 1.7;
+  }
+  .pv-text-input {
+    width: 72%;
+    max-width: 340px;
+    padding: 12px 16px;
+    font-size: 1.4em;
+    font-weight: bold;
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    background: #141824;
+    color: #fff;
+    text-align: center;
+    margin: 8px 0 12px;
+  }
+  .pv-text-input:focus {
+    outline: none;
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.8);
+  }
+  .pv-text-input.box-error {
+    border-color: #ff4444;
+    background: rgba(255, 68, 68, 0.2);
+    animation: cellShake 0.35s ease;
+  }
+
+  /* Factor Card Matching Grid (6 cols x 2 rows like reference table) */
+  .factor-target-banner {
+    font-size: 1.35em;
+    font-weight: bold;
+    color: #ffd700;
+    margin: 8px 0 12px;
+  }
+  .factor-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin: 10px 0 14px;
+    direction: rtl;
+  }
+  @media (max-width: 600px) {
+    .factor-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .factor-cell {
+    padding: 14px 8px;
+    font-size: 1.35em;
+    font-weight: bold;
+    border: 2px solid rgba(255, 215, 0, 0.75);
+    border-radius: 10px;
+    background: #1b2234;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+    user-select: none;
+  }
+  .factor-cell:hover:not(.locked) {
+    transform: scale(1.04);
+    background: rgba(255, 215, 0, 0.22);
+  }
+  .factor-cell.picked {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    color: #100921;
+    border-color: #00ff66;
+    box-shadow: 0 0 14px rgba(0, 230, 118, 0.65);
+  }
+  .factor-cell.wrong-shake {
+    background: rgba(255, 68, 68, 0.35);
+    border-color: #ff4444;
+    animation: cellShake 0.35s ease;
+  }
+
+  /* Multiplication Card Matching Grid */
+  .match-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0 12px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    border-radius: 12px;
+    font-size: 1em;
+    color: #ffd700;
+    font-weight: bold;
+  }
+  .match-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 10px 0 14px;
+    direction: rtl;
+  }
+  @media (max-width: 600px) {
+    .match-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .match-card {
+    min-height: 74px;
+    padding: 12px 10px;
+    font-size: 1.25em;
+    font-weight: bold;
+    border: 2px solid rgba(255, 215, 0, 0.8);
+    border-radius: 12px;
+    background: #1b2234;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: transform 0.16s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+    line-height: 1.35;
+  }
+  .match-card:hover:not(.matched) {
+    transform: translateY(-2px) scale(1.02);
+    background: rgba(255, 215, 0, 0.2);
+  }
+  .match-card.selected {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #141824;
+    border-color: #fff;
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.8);
+    transform: scale(1.03);
+  }
+  .match-card.matched {
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.28), rgba(0, 176, 255, 0.22));
+    color: #00ff66;
+    border-color: #00ff66;
+    cursor: default;
+    box-shadow: 0 0 12px rgba(0, 255, 102, 0.35);
+  }
+  .match-card.wrong-shake {
+    background: rgba(255, 68, 68, 0.35);
+    border-color: #ff4444;
+    animation: cellShake 0.35s ease;
+  }
+
+  /* Ordering Numbers Challenge (3 sequential stages with text boxes instead of lines/drag) */
+  .order-prompt-banner {
+    font-size: 1.25em;
+    font-weight: bold;
+    color: #ffd700;
+    margin: 10px 0 14px;
+    padding: 10px 14px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    border-radius: 12px;
+  }
+  .order-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 12px 0 16px;
+    direction: rtl;
+  }
+  @media (max-width: 600px) {
+    .order-cards-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .order-number-card {
+    background: #f5f5f5;
+    color: #141824;
+    border: 3px solid #f4a261;
+    border-radius: 16px;
+    padding: 16px 10px;
+    font-size: 1.6em;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    user-select: none;
+  }
+  .order-inputs-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 8px 0 14px;
+    direction: rtl;
+  }
+  @media (max-width: 600px) {
+    .order-inputs-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .order-slot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .order-slot-label {
+    font-size: 0.85em;
+    color: #ffd700;
+    font-weight: bold;
+  }
+  .order-text-box {
+    width: 100%;
+    padding: 11px 8px;
+    font-size: 1.3em;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    background: #141824;
+    color: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .order-text-box:focus {
+    outline: none;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.75);
+  }
+  .order-text-box.box-error {
+    border-color: #ff4444;
+    background: rgba(255, 68, 68, 0.2);
+    animation: cellShake 0.35s ease;
+  }
+
+  @keyframes cellShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .answer-input { width:80%; padding:12px; font-size:1.3em; border:2px solid #ffd700; border-radius:10px; background:#141824; color:#fff; text-align:center; margin:12px 0; }
+  .answer-input:focus { outline:none; box-shadow:0 0 15px #ffd700; }
+  .btn { padding:11px 28px; font-size:1.05em; border:none; border-radius:25px; cursor:pointer; margin:5px; font-weight:bold; transition:transform .2s; }
+  .btn:hover { transform:scale(1.05); }
+  .btn-check { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#141824; }
+  .btn-close { background:#555; color:#fff; }
+  .feedback { margin-top:10px; font-size:1.25em; font-weight:bold; min-height:26px; }
+  .feedback.correct { color:#00ff66; } .feedback.wrong { color:#ff5555; }
+
+  .win-message { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:200; justify-content:center; align-items:center; flex-direction:column; color:#ffd700; text-align:center; padding:20px; direction:rtl; }
+  .win-message.active { display:flex; }
+  .win-message h1 { font-size:2.6em; margin-bottom:14px; }
+  .win-message p { font-size:1.35em; color:#fff; }
+
+  /* Magical Key Reward Animation & Styling */
+  .key-reward {
+    width: 145px;
+    max-width: 42vw;
+    margin: 18px 0 10px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 22px rgba(255, 215, 0, 0.85));
+    animation: floatKey 2.4s ease-in-out infinite;
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+  .key-reward:hover {
+    transform: scale(1.12) rotate(-6deg);
+    filter: drop-shadow(0 0 32px rgba(255, 215, 0, 1));
+  }
+  @keyframes floatKey {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(4deg); }
+  }
+  .btn-enter-room {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    color: #100921;
+    font-size: 1.2em;
+    padding: 13px 32px;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.55);
+  }
+</style>
+</head>
+<body>
+
+<div class="coord-helper" id="coordHelper">Edit Mode: Click image to copy top/left %</div>
+
+<div class="game-container" id="gameContainer">
+  <img src="https://talented-nation.github.io/behaviour/fun/pics/diningroom.jpeg" alt="غرفة الطعام الملكية" id="roomBg">
+
+  <!-- 10 Hotspots accurately positioned on the red markers in HOTSPOTS.png -->
+  <div class="hotspot" style="top:46.5%;left:7.8%;width:52px;height:52px;" data-q="0" title="النافذة اليسرى"></div>
+  <div class="hotspot" style="top:60.5%;left:19%;width:44px;height:44px;" data-q="1" title="الكرسي الخشبي الأيسر"></div>
+  <div class="hotspot" style="top:43%;left:29%;width:44px;height:44px;" data-q="2" title="الشعلة"></div>
+  <div class="hotspot" style="top:79.5%;left:34.3%;width:52px;height:52px;" data-q="3" title="المقعد الخشبي الأمامي الأيسر"></div>
+  <div class="hotspot" style="top:43%;left:41.6%;width:46px;height:46px;" data-q="4" title="اللوحة الجدارية اليسرى"></div>
+  <div class="hotspot" style="top:24.5%;left:52.2%;width:46px;height:46px;" data-q="5" title="الثريا السفلية"></div>
+  <div class="hotspot" style="top:56.8%;left:52.8%;width:46px;height:46px;" data-q="6" title="الموقد المشتعل"></div>
+  <div class="hotspot" style="top:70.2%;left:52%;width:50px;height:50px;" data-q="7" title="السجادة الوسطى"></div>
+  <div class="hotspot" style="top:68.5%;left:79.5%;width:54px;height:54px;" data-q="8" title="المائدة اليمنى"></div>
+  <div class="hotspot" style="top:40%;left:90%;width:58px;height:58px;" data-q="9" title="اللوحة الجدارية الكبيرة اليمنى"></div>
+</div>
+
+<!-- Countdown Timer -->
+<div class="timer-box" id="timerBox">
+  <span>⏳</span>
+  <span id="timerDisplay">10:00</span>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalBox">
+    <h2 id="modalTitle"></h2>
+    <div class="question" id="questionBox">
+      <div id="questionText"></div>
+      <img id="questionImage" class="question-img" src="" alt="صورة السؤال" style="display:none;" onclick="openLightbox(this.src)" title="اضغط لتكبير الصورة">
+      <div id="zoomHint" class="zoom-hint" style="display:none;">🔍 اضغط على الصورة لتكبيرها بملء الشاشة</div>
+    </div>
+
+    <!-- 4-Stage Algebra & Patterns Challenge (Dining Room Theme) -->
+    <div id="algebraChallengeBox" style="display:none;">
+      <div class="factor-stage-bar" id="algStageBar"></div>
+      <div class="pv-question-card" id="algPromptText"></div>
+      <div class="choices-grid" id="algChoicesGrid"></div>
+    </div>
+
+    <!-- 5-Stage Place Value Challenge -->
+    <div id="placeValueChallengeBox" style="display:none;">
+      <div class="factor-stage-bar" id="pvStageBar"></div>
+      <div class="pv-question-card" id="pvPromptText"></div>
+      <div class="choices-grid" id="pvChoicesGrid" style="display:none;"></div>
+      <input type="text" inputmode="numeric" class="pv-text-input" id="pvTextInput" placeholder="اكتب الإجابة هنا" style="display:none;">
+    </div>
+
+    <!-- Factor card matching container -->
+    <div id="factorChallengeBox" style="display:none;">
+      <div class="factor-stage-bar" id="factorStageBar"></div>
+      <div class="factor-target-banner" id="factorTargetBanner"></div>
+      <div class="factor-grid" id="factorGrid"></div>
+    </div>
+
+    <!-- Multiplication card matching container -->
+    <div id="multiplicationMatchBox" style="display:none;">
+      <div class="match-status-bar">
+        <span id="matchProgressText">التطابقات: ٠ / ٦</span>
+        <span>اختر بطاقة الضرب ثم بطاقة الناتج</span>
+      </div>
+      <div class="match-grid" id="matchGrid"></div>
+    </div>
+
+    <!-- Ordering numbers 3-stage challenge with text inputs -->
+    <div id="orderingChallengeBox" style="display:none;">
+      <div class="factor-stage-bar" id="orderStageBar"></div>
+      <div class="order-prompt-banner" id="orderPromptBanner"></div>
+      <div class="order-cards-row" id="orderCardsRow"></div>
+      <div class="order-inputs-row" id="orderInputsRow"></div>
+    </div>
+    
+    <!-- Text input for standard questions -->
+    <input type="text" inputmode="numeric" class="answer-input" id="answerInput" placeholder="اكتب إجابتك هنا">
+    
+    <!-- Multiple choices container -->
+    <div class="choices-grid" id="choicesContainer" style="display:none;"></div>
+    
+    <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">تحقق ✓</button>
+    <button class="btn btn-close" onclick="closeModal()">إغلاق ✕</button>
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+
+<!-- Lightbox for full-screen zoom -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="صورة السؤال مكبرة">
+</div>
+
+<div class="win-message" id="winMessage">
+  <h1>🎉 أحسنت أيها الساحر! 🎉</h1>
+  <p>اجتزت تحدي غرفة الطعام بنجاح وحصلت على المفتاح الثالث!</p>
+  <img src="https://talented-nation.github.io/behaviour/key.png" alt="المفتاح السحري" class="key-reward" onclick="enterNextRoom()" title="اضغط لفتح الغرفة التالية">
+  <p style="font-size:1.15em; color:#ffd700; margin-bottom:14px;">🔑 استخدم المفتاح لفتح الباب والانتقال إلى الغرفة التالية</p>
+  <div>
+    <button class="btn btn-enter-room" id="enterRoomBtn" onclick="enterNextRoom()">افتح الباب وادخل الغرفة التالية 🚪✨</button>
+    <button class="btn btn-close" onclick="location.reload()">العب مرة أخرى 🔄</button>
+  </div>
+</div>
+
+<div class="win-message" id="timeUpMessage">
+  <h1 style="color:#ff5555;">⌛ انتهى الوقت! ⌛</h1>
+  <p id="finalScoreText"></p>
+  <button class="btn btn-check" style="margin-top:26px;" onclick="location.reload()">حاول مرة أخرى 🔄</button>
+</div>
+
+<audio id="correctSound" src="https://talented-nation.github.io/behaviour/correct.mp3" preload="auto"></audio>
+<audio id="hooraySound" src="https://talented-nation.github.io/behaviour/hooray.mp3" preload="auto"></audio>
+<audio id="doorSound" src="https://talented-nation.github.io/behaviour/door.mp3" preload="auto"></audio>
+<audio id="loseSound" src="https://talented-nation.github.io/behaviour/lose.mp3" preload="auto"></audio>
+<audio id="timeTickSound" src="https://talented-nation.github.io/behaviour/timetick.mp3" preload="auto" loop></audio>
+
+<script>
+// ضع رابط صفحة الغرفة التالية هنا عند جاهزيتها
+const NEXT_ROOM_URL = "room4.html";
+
+const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+function toArabicDigits(num) {
+  return String(num).replace(/\d/g, d => ARABIC_DIGITS[Number(d)]);
+}
+
+function parseFlexibleNumber(raw) {
+  if (typeof raw !== 'string') return NaN;
+  const normalized = raw
+    .trim()
+    .replace(/[,،\s]/g, '')
+    .replace(/[٠-٩]/g, d => String(ARABIC_DIGITS.indexOf(d)))
+    .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+  if (!/^-?\d+$/.test(normalized)) return NaN;
+  return parseInt(normalized, 10);
+}
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function generateNearestNumberQuestion() {
+  // Exact same pattern as: العدد الأقرب إلى 6753 -> {6760, 67500, 7000, 6800}
+  const presets = [6753];
+  const thousands = randInt(2, 8);
+  const hundreds = randInt(5, 8); // ensures rounding to thousand goes up cleanly (e.g., 6753 -> 7000)
+  const tens = randInt(2, 8);
+  const ones = randInt(1, 4);     // ensures ceil to next ten is strictly different from floor*100
+  const generated = thousands * 1000 + hundreds * 100 + tens * 10 + ones;
+
+  // Pick either the generated number or occasionally the classic 6753 pattern, always generating fresh numbers on reload/reopen
+  const target = generated;
+
+  const correct = Math.ceil(target / 10) * 10;          // e.g. 6760 (العدد الأقرب)
+  const extraZero = Math.floor(target / 10) * 100;      // e.g. 67500
+  const nearestThousand = Math.round(target / 1000) * 1000; // e.g. 7000
+  const nearestHundred = Math.round(target / 100) * 100;    // e.g. 6800
+
+  const options = shuffleArray([correct, extraZero, nearestThousand, nearestHundred]);
+  const letters = ['أ', 'ب', 'ج', 'د'];
+
+  return {
+    q: `العدد الأقرب إلى ${toArabicDigits(target)} هو:`,
+    choices: options.map((val, idx) => ({
+      label: `${letters[idx]}- ${toArabicDigits(val)}`,
+      value: val
+    })),
+    a: correct
+  };
+}
+
+// ==========================================
+// 4-Stage Generative Algebra & Patterns Challenge (Dining Room Theme)
+// ==========================================
+let algState = null;
+
+function generateAlgebraStages() {
+  // Stage 1: Model 1 from image - Multi-step numerical expression
+  // Example: لدى الطاهي ٤٠ حبة تمر، فإذا وزّع على ٥ أطباق ٤ حبات في كل طبق. ما التعبير الذي يمثل عدد حبات التمر المتبقية؟ => ٤٠ - (٥ × ٤)
+  const s1Scenarios = [
+    () => {
+      const total = pickRandom([40, 45, 50, 60]);
+      const plates = pickRandom([4, 5, 6]);
+      const perPlate = pickRandom([3, 4, 5]);
+      const correct = `${toArabicDigits(total)} - (${toArabicDigits(plates)} × ${toArabicDigits(perPlate)})`;
+      const d1 = `(${toArabicDigits(total)} - ${toArabicDigits(plates)}) × ${toArabicDigits(perPlate)}`;
+      const d2 = `${toArabicDigits(total)} + (${toArabicDigits(plates)} × ${toArabicDigits(perPlate)})`;
+      const d3 = `(${toArabicDigits(total)} + ${toArabicDigits(plates)}) × ${toArabicDigits(perPlate)}`;
+      return {
+        prompt: `١) وضع الطاهي ${toArabicDigits(total)} حبة تمر في سلة المائدة، فإذا وزّع على ${toArabicDigits(plates)} أطباق ${toArabicDigits(perPlate)} حبات في كل طبق. ما التعبير الذي يمثل عدد حبات التمر المتبقية في السلة؟`,
+        correct,
+        options: shuffleArray([correct, d1, d2, d3])
+      };
+    },
+    () => {
+      const total = pickRandom([36, 42, 48, 54]);
+      const tables = pickRandom([4, 6]);
+      const chairs = pickRandom([3, 5]);
+      const correct = `${toArabicDigits(total)} - (${toArabicDigits(tables)} × ${toArabicDigits(chairs)})`;
+      const d1 = `(${toArabicDigits(total)} - ${toArabicDigits(tables)}) × ${toArabicDigits(chairs)}`;
+      const d2 = `${toArabicDigits(total)} + (${toArabicDigits(tables)} × ${toArabicDigits(chairs)})`;
+      const d3 = `(${toArabicDigits(total)} + ${toArabicDigits(tables)}) × ${toArabicDigits(chairs)}`;
+      return {
+        prompt: `١) في قاعة الطعام ${toArabicDigits(total)} كوبًا زجاجيًا، وُضع على كل مائدة من الموائد الـ ${toArabicDigits(tables)} عدد ${toArabicDigits(chairs)} أكواب. ما التعبير الذي يمثل عدد الأكواب المتبقية؟`,
+        correct,
+        options: shuffleArray([correct, d1, d2, d3])
+      };
+    }
+  ];
+  const s1 = pickRandom(s1Scenarios)();
+
+  // Stage 2: Model 2 from image - Equation with variable (م)
+  // Example: على المائدة ٥٠ فطيرة، أكل الضيوف بعضًا منها وتبقى ٢٠ فطيرة. أيّ جملة عددية من التالي توضح ذلك؟ حيث (م) تمثل ما أكله الضيوف => ٥٠ - م = ٢٠
+  const total2 = pickRandom([30, 40, 50, 60]);
+  const rem2 = pickRandom([12, 15, 20, 25]);
+  const correct2 = `${toArabicDigits(total2)} - م = ${toArabicDigits(rem2)}`;
+  const d2_1 = `م - ${toArabicDigits(rem2)} = ${toArabicDigits(total2)}`;
+  const d2_2 = `${toArabicDigits(rem2)} - م = ${toArabicDigits(total2)}`;
+  const d2_3 = `م - ${toArabicDigits(total2)} = ${toArabicDigits(rem2)}`;
+  const s2 = {
+    prompt: `٢) على المائدة ${toArabicDigits(total2)} فطيرة، تناول الضيوف بعضًا منها وتبقى على المائدة ${toArabicDigits(rem2)} فطيرة. أيّ جملة عددية من التالي توضح ذلك؟ حيث (م) تمثل عدد الفطائر التي تناولها الضيوف:`,
+    correct: correct2,
+    options: shuffleArray([correct2, d2_1, d2_2, d2_3])
+  };
+
+  // Stage 3: Model 3 from image - Algebraic expression with symbol (▲)
+  // Example: يمثل الشكل ▲ عدد الملاعق الموجودة على المائدة. أضاف الخادم ٣ ملاعق إضافية. ما هو عدد الملاعق الآن؟ => ▲ + ٣
+  const add3 = pickRandom([3, 4, 5, 6]);
+  const correct3 = `▲ + ${toArabicDigits(add3)}`;
+  const d3_1 = `${toArabicDigits(add3)} ÷ ▲`;
+  const d3_2 = `▲ - ${toArabicDigits(add3)}`;
+  const d3_3 = `${toArabicDigits(add3)} × ▲`;
+  const s3 = {
+    prompt: `٣) يمثل الشكل ▲ عدد الملاعق الفضية على المائدة. أضاف الخادم ${toArabicDigits(add3)} ملاعق إضافية. ما التعبير الذي يمثل عدد الملاعق الآن؟`,
+    correct: correct3,
+    options: shuffleArray([correct3, d3_1, d3_2, d3_3])
+  };
+
+  // Stage 4: Model 4 from image - Multiplicative comparison / inverse division
+  // Example: في الإبريق الكبير ٨٠ كوبًا من العصير، وهو يساوي ٤ أضعاف ما في الإبريق الصغير. أيّ مما يلي يمكن استخدامه لمعرفة عدد الأكواب في الإبريق الصغير؟ => ٨٠ ÷ ٤
+  const mult4 = pickRandom([3, 4, 5]);
+  const base4 = pickRandom([15, 20, 25]);
+  const big4 = mult4 * base4;
+  const correct4 = `${toArabicDigits(big4)} ÷ ${toArabicDigits(mult4)}`;
+  const d4_1 = `${toArabicDigits(big4)} + ${toArabicDigits(mult4)}`;
+  const d4_2 = `${toArabicDigits(big4)} - ${toArabicDigits(mult4)}`;
+  const d4_3 = `${toArabicDigits(big4)} × ${toArabicDigits(mult4)}`;
+  const s4 = {
+    prompt: `٤) في وعاء الضيافة الكبير ${toArabicDigits(big4)} حبة عنب، وهو يساوي ${toArabicDigits(mult4)} أضعاف ما في الطبق الصغير. أيّ مما يلي يمكن استخدامه لمعرفة عدد حبات العنب في الطبق الصغير؟`,
+    correct: correct4,
+    options: shuffleArray([correct4, d4_1, d4_2, d4_3])
+  };
+
+  return [s1, s2, s3, s4];
+}
+
+function initAlgebraChallenge() {
+  algState = {
+    stages: generateAlgebraStages(),
+    stageIndex: 0,
+    selectedOption: null,
+    completed: false
+  };
+  renderAlgebraStage();
+}
+
+function renderAlgebraStage() {
+  const stageBar = document.getElementById('algStageBar');
+  const promptEl = document.getElementById('algPromptText');
+  const choicesGrid = document.getElementById('algChoicesGrid');
+  const fb = document.getElementById('feedback');
+
+  algState.selectedOption = null;
+  fb.textContent = '';
+  fb.className = 'feedback';
+
+  stageBar.innerHTML = '';
+  algState.stages.forEach((_, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'stage-pill';
+    if (idx < algState.stageIndex) pill.classList.add('done');
+    else if (idx === algState.stageIndex) pill.classList.add('active');
+    pill.textContent = `المرحلة ${toArabicDigits(idx + 1)}`;
+    stageBar.appendChild(pill);
+  });
+
+  const currentStage = algState.stages[algState.stageIndex];
+  promptEl.textContent = currentStage.prompt;
+
+  choicesGrid.innerHTML = '';
+  const arabicLetters = ['أ', 'ب', 'ج', 'د'];
+  currentStage.options.forEach((optText, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'choice-btn';
+    btn.textContent = `${arabicLetters[idx]}- ${optText}`;
+    btn.addEventListener('click', () => {
+      choicesGrid.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      algState.selectedOption = optText;
+    });
+    choicesGrid.appendChild(btn);
+  });
+}
+
+function checkAlgebraStage() {
+  if (!algState || algState.completed) return;
+  const currentStage = algState.stages[algState.stageIndex];
+  const fb = document.getElementById('feedback');
+
+  if (algState.selectedOption === null) {
+    fb.textContent = '⚠️ اختر إحدى الإجابات أولًا';
+    fb.className = 'feedback wrong';
+    return;
+  }
+
+  if (algState.selectedOption === currentStage.correct) {
+    if (algState.stageIndex < algState.stages.length - 1) {
+      fb.textContent = `✅ أحسنت! اكتملت المرحلة ${toArabicDigits(algState.stageIndex + 1)}، جاري الانتقال للمرحلة التالية...`;
+      fb.className = 'feedback correct';
+      setTimeout(() => {
+        algState.stageIndex++;
+        renderAlgebraStage();
+      }, 950);
+    } else {
+      algState.completed = true;
+      completeCurrentQuestion();
+    }
+  } else {
+    fb.textContent = '❌ إجابة غير صحيحة، فكّر في التعبير الجبري الصحيح وحاول مرة أخرى!';
+    fb.className = 'feedback wrong';
+  }
+}
+
+// ==========================================
+// 5-Stage Generative Place Value Challenge
+// ==========================================
+let pvState = null;
+
+function twoDigitArabicWords(n) {
+  const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+  const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+  const teens = {
+    11: 'أحد عشر', 12: 'اثنا عشر', 13: 'ثلاثة عشر', 14: 'أربعة عشر', 15: 'خمسة عشر',
+    16: 'ستة عشر', 17: 'سبعة عشر', 18: 'ثمانية عشر', 19: 'تسعة عشر'
+  };
+  if (teens[n]) return teens[n];
+  const u = n % 10;
+  const t = Math.floor(n / 10);
+  if (u === 0) return tens[t];
+  return `${ones[u]} و${tens[t]}`;
+}
+
+function thousandsArabicPhrase(k) {
+  const map = {
+    3: '٣ آلاف',
+    4: '٤ آلاف',
+    5: '٥ آلاف',
+    6: '٦ آلاف',
+    7: '٧ آلاف',
+    8: '٨ آلاف',
+    9: '٩ آلاف'
+  };
+  return map[k] || `${toArabicDigits(k)} آلاف`;
+}
+
+function hundredsArabicPhrase(h) {
+  const map = {
+    1: '١ مئة',
+    2: '٢ مئتان',
+    3: '٣ مئات',
+    4: '٤ مئات',
+    5: '٥ مئات',
+    6: '٦ مئات',
+    7: '٧ مئات',
+    8: '٨ مئات',
+    9: '٩ مئات'
+  };
+  return map[h] || `${toArabicDigits(h)} مئات`;
+}
+
+function generatePlaceValueStages() {
+  // Stage 1: Expanded form with missing tens place (e.g. 9 آلاف + 3 مئات + 8 وحدات => 9308)
+  const k1 = randInt(3, 9);
+  const h1 = randInt(2, 9);
+  let u1 = randInt(2, 9);
+  while (u1 === h1 || u1 === k1) u1 = randInt(2, 9);
+
+  const ans1 = k1 * 1000 + h1 * 100 + u1;
+  const distractors1 = shuffleArray([
+    k1 * 1000 + h1 * 10 + u1,          // e.g. 9038
+    k1 * 1000 + u1 * 100 + h1,          // e.g. 9803
+    k1 * 1000 + h1 * 100 + u1 * 10,     // e.g. 9380
+    h1 * 1000 + k1 * 100 + u1           // e.g. 3908
+  ]).slice(0, 3);
+
+  const stage1 = {
+    mode: 'choices',
+    prompt: `١) أي عدد يساوي ${thousandsArabicPhrase(k1)} + ${hundredsArabicPhrase(h1)} + ${toArabicDigits(u1)} وحدات؟`,
+    choices: shuffleArray([ans1, ...distractors1]).map(v => ({ label: toArabicDigits(v), value: v })),
+    answer: ans1
+  };
+
+  // Stage 2: 5-digit number with zero thousands (e.g. 3 آحاد + 5 عشرات + 4 مئات + 60 ألفًا => 60453)
+  const tt2 = randInt(2, 9); // tens of thousands (20..90 ألفًا)
+  const h2 = randInt(2, 9);
+  let t2 = randInt(2, 9);
+  while (t2 === h2) t2 = randInt(2, 9);
+  let u2 = randInt(2, 9);
+  while (u2 === t2 || u2 === h2) u2 = randInt(2, 9);
+
+  const ans2 = tt2 * 10000 + h2 * 100 + t2 * 10 + u2;
+  const distractors2 = shuffleArray([
+    tt2 * 1000 + h2 * 100 + t2 * 10 + u2,    // 6453 (missed 0 in thousands)
+    tt2 * 10000 + h2 * 1000 + t2 * 10 + u2,  // 64053
+    tt2 * 10000 + h2 * 100 + u2 * 10 + t2,   // 60435
+    tt2 * 10000 + t2 * 100 + h2 * 10 + u2    // 60543
+  ]).slice(0, 3);
+
+  const stage2 = {
+    mode: 'choices',
+    prompt: `٢) ما العدد الذي يساوي ${toArabicDigits(u2)} آحاد + ${toArabicDigits(t2)} عشرات + ${hundredsArabicPhrase(h2)} + ${toArabicDigits(tt2 * 10)} ألفًا؟`,
+    choices: shuffleArray([ans2, ...distractors2]).map(v => ({ label: toArabicDigits(v), value: v })),
+    answer: ans2
+  };
+
+  // Stage 3: Identify number where digit D has value D*100 (or D*1000)
+  const targetDigit = pickRandom([4, 6, 7, 8, 9]);
+  const isThousandsTarget = Math.random() < 0.45;
+  const targetValue = isThousandsTarget ? targetDigit * 1000 : targetDigit * 100;
+
+  let dA = randInt(1, 9); while (dA === targetDigit) dA = randInt(1, 9);
+  let dB = randInt(1, 9); while (dB === targetDigit || dB === dA) dB = randInt(1, 9);
+  let dC = randInt(1, 9); while (dC === targetDigit || dC === dA || dC === dB) dC = randInt(1, 9);
+
+  let ans3, dist3;
+  if (isThousandsTarget) {
+    // targetDigit must be in thousands place
+    ans3 = targetDigit * 1000 + dA * 100 + dB;
+    dist3 = [
+      dA * 1000 + targetDigit * 100 + dB * 10 + dC, // hundreds place
+      dA * 1000 + dB * 100 + targetDigit * 10 + dC, // tens place
+      dA * 10000 + dB * 1000 + targetDigit * 100 + dC // hundreds in 5-digit
+    ];
+  } else {
+    // targetDigit must be in hundreds place
+    ans3 = dA * 1000 + targetDigit * 100 + dB;
+    dist3 = [
+      targetDigit * 1000 + dA * 100 + dB * 10 + dC, // thousands place
+      dA * 1000 + dB * 100 + targetDigit * 10 + dC, // tens place
+      dA * 1000 + dB * 100 + dC * 10 + targetDigit  // ones place
+    ];
+  }
+
+  const stage3 = {
+    mode: 'choices',
+    prompt: `٣) أي عدد تمثّل فيه ${toArabicDigits(targetDigit)} قيمة ${toArabicDigits(targetValue)}؟`,
+    choices: shuffleArray([ans3, ...dist3]).map(v => ({ label: toArabicDigits(v), value: v })),
+    answer: ans3
+  };
+
+  // Stage 4: Text box input - find value of a specific digit in a 6-digit number
+  const digits6 = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 5);
+  // Insert one zero in tens or hundreds to raise difficulty
+  const zeroPos = pickRandom([3, 4]); // index 3 = hundreds, index 4 = tens
+  digits6.splice(zeroPos, 0, 0);
+  const fullNum4 = Number(digits6.join(''));
+
+  // Pick a non-zero digit from ten-thousands (idx 1), thousands (idx 2), or hundred-thousands (idx 0)
+  const chosenIdx = pickRandom([0, 1, 2]);
+  const chosenDigit4 = digits6[chosenIdx];
+  const placeMultiplier = Math.pow(10, 5 - chosenIdx);
+  const ans4 = chosenDigit4 * placeMultiplier;
+
+  const stage4 = {
+    mode: 'input',
+    prompt: `٤) قيمة الرقم ${toArabicDigits(chosenDigit4)} في العدد ${toArabicDigits(fullNum4)} هي:`,
+    answer: ans4
+  };
+
+  // Stage 5: Text box input - write number in standard form from word + place description
+  const k5 = randInt(3, 9);
+  const h5 = randInt(2, 9);
+  const rem5 = pickRandom([24, 25, 36, 42, 48, 53, 64, 75, 86, 94]);
+  const ans5 = k5 * 1000 + h5 * 100 + rem5;
+
+  const stage5 = {
+    mode: 'input',
+    prompt: `٥) اكتب العدد المكون من ${thousandsArabicPhrase(k5)}، و${hundredsArabicPhrase(h5)}، و${twoDigitArabicWords(rem5)} بالصورة القياسية:`,
+    answer: ans5
+  };
+
+  return [stage1, stage2, stage3, stage4, stage5];
+}
+
+function initPlaceValueChallenge() {
+  pvState = {
+    stages: generatePlaceValueStages(),
+    stageIndex: 0,
+    selectedChoice: null,
+    completed: false
+  };
+  renderPlaceValueStage();
+}
+
+function renderPlaceValueStage() {
+  const stageBar = document.getElementById('pvStageBar');
+  const promptEl = document.getElementById('pvPromptText');
+  const choicesGrid = document.getElementById('pvChoicesGrid');
+  const textInput = document.getElementById('pvTextInput');
+  const fb = document.getElementById('feedback');
+
+  pvState.selectedChoice = null;
+  fb.textContent = '';
+  fb.className = 'feedback';
+
+  stageBar.innerHTML = '';
+  pvState.stages.forEach((_, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'stage-pill';
+    if (idx < pvState.stageIndex) pill.classList.add('done');
+    else if (idx === pvState.stageIndex) pill.classList.add('active');
+    pill.textContent = `المرحلة ${toArabicDigits(idx + 1)}`;
+    stageBar.appendChild(pill);
+  });
+
+  const currentStage = pvState.stages[pvState.stageIndex];
+  promptEl.textContent = currentStage.prompt;
+
+  if (currentStage.mode === 'choices') {
+    textInput.style.display = 'none';
+    choicesGrid.style.display = 'grid';
+    choicesGrid.innerHTML = '';
+
+    const arabicLetters = ['أ', 'ب', 'ج', 'د'];
+    currentStage.choices.forEach((choice, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choice-btn';
+      btn.textContent = `${arabicLetters[idx]}- ${choice.label}`;
+      btn.addEventListener('click', () => {
+        choicesGrid.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        pvState.selectedChoice = choice.value;
+      });
+      choicesGrid.appendChild(btn);
+    });
+  } else {
+    choicesGrid.style.display = 'none';
+    choicesGrid.innerHTML = '';
+    textInput.style.display = 'inline-block';
+    textInput.value = '';
+    textInput.classList.remove('box-error');
+    setTimeout(() => textInput.focus(), 100);
+  }
+}
+
+function checkPlaceValueStage() {
+  if (!pvState || pvState.completed) return;
+  const currentStage = pvState.stages[pvState.stageIndex];
+  const fb = document.getElementById('feedback');
+  const textInput = document.getElementById('pvTextInput');
+  let userVal;
+
+  if (currentStage.mode === 'choices') {
+    if (pvState.selectedChoice === null) {
+      fb.textContent = '⚠️ اختر إحدى الإجابات أولًا';
+      fb.className = 'feedback wrong';
+      return;
+    }
+    userVal = pvState.selectedChoice;
+  } else {
+    textInput.classList.remove('box-error');
+    userVal = parseFlexibleNumber(textInput.value);
+    if (isNaN(userVal)) {
+      textInput.classList.add('box-error');
+      fb.textContent = '⚠️ اكتب عددًا صحيحًا في المربع';
+      fb.className = 'feedback wrong';
+      return;
+    }
+  }
+
+  if (userVal === currentStage.answer) {
+    if (pvState.stageIndex < pvState.stages.length - 1) {
+      fb.textContent = `✅ أحسنت! اكتملت المرحلة ${toArabicDigits(pvState.stageIndex + 1)}، الانتقال للمرحلة التالية...`;
+      fb.className = 'feedback correct';
+      setTimeout(() => {
+        pvState.stageIndex++;
+        renderPlaceValueStage();
+      }, 950);
+    } else {
+      pvState.completed = true;
+      completeCurrentQuestion();
+    }
+  } else {
+    if (currentStage.mode === 'input') textInput.classList.add('box-error');
+    fb.textContent = '❌ إجابة غير صحيحة، راجع القيمة المنزلية وحاول مرة أخرى!';
+    fb.className = 'feedback wrong';
+  }
+}
+
+// ==========================================
+// 3-Number Factor Matching Challenge
+// ==========================================
+const FACTOR_NUMBER_POOL = [4, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24];
+
+function getFactors(n) {
+  const res = [];
+  for (let i = 1; i <= n; i++) {
+    if (n % i === 0) res.push(i);
+  }
+  return res;
+}
+
+let factorState = null;
+
+function initFactorChallenge() {
+  const chosenThree = shuffleArray(FACTOR_NUMBER_POOL).slice(0, 3);
+  factorState = {
+    targets: chosenThree,
+    stageIndex: 0,
+    pickedValues: new Set(),
+    boardNumbers: [],
+    completed: false
+  };
+  setupFactorStage();
+}
+
+function setupFactorStage() {
+  const target = factorState.targets[factorState.stageIndex];
+  const factors = getFactors(target);
+  const factorSet = new Set(factors);
+
+  const gridSet = new Set(factors);
+  const candidates = shuffleArray(
+    Array.from({ length: 28 }, (_, idx) => idx + 1).filter(n => !factorSet.has(n))
+  );
+
+  for (const c of candidates) {
+    if (gridSet.size >= 12) break;
+    gridSet.add(c);
+  }
+
+  factorState.boardNumbers = shuffleArray(Array.from(gridSet)).slice(0, 12);
+  factorState.pickedValues = new Set();
+
+  renderFactorBoard();
+}
+
+function renderFactorBoard() {
+  const stageBar = document.getElementById('factorStageBar');
+  const banner = document.getElementById('factorTargetBanner');
+  const grid = document.getElementById('factorGrid');
+  const fb = document.getElementById('feedback');
+
+  stageBar.innerHTML = '';
+  factorState.targets.forEach((num, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'stage-pill';
+    if (idx < factorState.stageIndex) pill.classList.add('done');
+    else if (idx === factorState.stageIndex) pill.classList.add('active');
+    pill.textContent = `الرقم ${toArabicDigits(idx + 1)}: ${toArabicDigits(num)}`;
+    stageBar.appendChild(pill);
+  });
+
+  const currentTarget = factorState.targets[factorState.stageIndex];
+  banner.textContent = `اضغط على المربعات التي تمثل عوامل العدد ${toArabicDigits(currentTarget)}`;
+  fb.textContent = '';
+  fb.className = 'feedback';
+
+  grid.innerHTML = '';
+  factorState.boardNumbers.forEach(num => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'factor-cell';
+    cell.textContent = toArabicDigits(num);
+
+    if (factorState.pickedValues.has(num)) {
+      cell.classList.add('picked');
+    }
+
+    cell.addEventListener('click', () => handleFactorCellClick(num, cell));
+    grid.appendChild(cell);
+  });
+}
+
+function handleFactorCellClick(num, cellEl) {
+  if (!factorState || factorState.completed) return;
+  const target = factorState.targets[factorState.stageIndex];
+  const validFactors = getFactors(target);
+  const fb = document.getElementById('feedback');
+
+  if (target % num === 0) {
+    if (!factorState.pickedValues.has(num)) {
+      factorState.pickedValues.add(num);
+      cellEl.classList.add('picked');
+      fb.textContent = `✨ أحسنت! ${toArabicDigits(num)} من عوامل ${toArabicDigits(target)}`;
+      fb.className = 'feedback correct';
+    }
+
+    const allFound = validFactors.every(f => factorState.pickedValues.has(f));
+    if (allFound) {
+      document.querySelectorAll('.factor-cell').forEach(c => c.classList.add('locked'));
+      if (factorState.stageIndex < factorState.targets.length - 1) {
+        fb.textContent = `✅ اكتملت عوامل ${toArabicDigits(target)}! الانتقال للرقم التالي...`;
+        fb.className = 'feedback correct';
+        setTimeout(() => {
+          factorState.stageIndex++;
+          setupFactorStage();
+        }, 950);
+      } else {
+        factorState.completed = true;
+        completeCurrentQuestion();
+      }
+    }
+  } else {
+    cellEl.classList.add('wrong-shake');
+    fb.textContent = `❌ ${toArabicDigits(num)} ليس من عوامل ${toArabicDigits(target)}، حاول مرة أخرى!`;
+    fb.className = 'feedback wrong';
+    setTimeout(() => cellEl.classList.remove('wrong-shake'), 380);
+  }
+}
+
+// ==========================================
+// Generative Multiplication Card Matching Game
+// ==========================================
+let matchState = null;
+
+function generateMultiplicationPairs(pairCount = 6) {
+  const pairs = [];
+  const usedProducts = new Set();
+  const usedExpressions = new Set();
+  const allCandidates = [];
+
+  const twoDigitPool = [14, 15, 16, 18, 22, 24, 25, 28, 32, 35, 36, 42, 45];
+  const oneDigitPool = [3, 4, 5, 6, 7, 8, 9];
+  for (const a of shuffleArray(twoDigitPool)) {
+    for (const b of shuffleArray(oneDigitPool)) {
+      const prod = a * b;
+      if (prod <= 360) {
+        allCandidates.push({ a, b, prod, key: `${a}x${b}` });
+      }
+    }
+  }
+
+  for (let a = 3; a <= 12; a++) {
+    for (let b = 3; b <= 12; b++) {
+      const prod = a * b;
+      allCandidates.push({ a, b, prod, key: `${a}x${b}` });
+    }
+  }
+
+  for (const cand of shuffleArray(allCandidates)) {
+    if (pairs.length >= pairCount) break;
+    if (usedProducts.has(cand.prod) || usedExpressions.has(cand.key)) continue;
+
+    usedProducts.add(cand.prod);
+    usedExpressions.add(cand.key);
+    pairs.push({
+      id: pairs.length,
+      exprText: `${toArabicDigits(cand.a)} × ${toArabicDigits(cand.b)}`,
+      ansText: `${toArabicDigits(cand.prod)}`,
+      productValue: cand.prod
+    });
+  }
+
+  return pairs;
+}
+
+function initMultiplicationMatch() {
+  const pairs = generateMultiplicationPairs(6);
+  const cards = [];
+
+  pairs.forEach(p => {
+    cards.push({
+      uid: `expr-${p.id}`,
+      pairId: p.id,
+      kind: 'expr',
+      label: p.exprText,
+      matched: false
+    });
+    cards.push({
+      uid: `ans-${p.id}`,
+      pairId: p.id,
+      kind: 'ans',
+      label: p.ansText,
+      matched: false
+    });
+  });
+
+  matchState = {
+    totalPairs: pairs.length,
+    matchedCount: 0,
+    selectedUid: null,
+    locked: false,
+    completed: false,
+    cards: shuffleArray(cards)
+  };
+
+  renderMatchBoard();
+}
+
+function renderMatchBoard() {
+  const grid = document.getElementById('matchGrid');
+  const progressEl = document.getElementById('matchProgressText');
+  const fb = document.getElementById('feedback');
+
+  progressEl.textContent = `التطابقات: ${toArabicDigits(matchState.matchedCount)} / ${toArabicDigits(matchState.totalPairs)}`;
+  fb.textContent = '';
+  fb.className = 'feedback';
+
+  grid.innerHTML = '';
+  matchState.cards.forEach(card => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'match-card';
+    btn.dataset.uid = card.uid;
+    btn.textContent = card.label;
+
+    if (card.matched) btn.classList.add('matched');
+    else if (matchState.selectedUid === card.uid) btn.classList.add('selected');
+
+    btn.addEventListener('click', () => handleMatchCardClick(card.uid, btn));
+    grid.appendChild(btn);
+  });
+}
+
+function handleMatchCardClick(uid, btnEl) {
+  if (!matchState || matchState.locked || matchState.completed) return;
+  const card = matchState.cards.find(c => c.uid === uid);
+  if (!card || card.matched) return;
+
+  const fb = document.getElementById('feedback');
+
+  if (!matchState.selectedUid) {
+    matchState.selectedUid = uid;
+    btnEl.classList.add('selected');
+    fb.textContent = 'اختر البطاقة المطابقة لها...';
+    fb.className = 'feedback';
+    return;
+  }
+
+  if (matchState.selectedUid === uid) {
+    matchState.selectedUid = null;
+    btnEl.classList.remove('selected');
+    fb.textContent = '';
+    return;
+  }
+
+  const firstCard = matchState.cards.find(c => c.uid === matchState.selectedUid);
+  const firstBtn = document.querySelector(`.match-card[data-uid="${matchState.selectedUid}"]`);
+
+  if (!firstCard || !firstBtn) {
+    matchState.selectedUid = null;
+    return;
+  }
+
+  if (firstCard.pairId === card.pairId && firstCard.kind !== card.kind) {
+    firstCard.matched = true;
+    card.matched = true;
+    matchState.selectedUid = null;
+    matchState.matchedCount++;
+
+    firstBtn.classList.remove('selected');
+    firstBtn.classList.add('matched');
+    btnEl.classList.add('matched');
+
+    document.getElementById('matchProgressText').textContent =
+      `التطابقات: ${toArabicDigits(matchState.matchedCount)} / ${toArabicDigits(matchState.totalPairs)}`;
+
+    if (matchState.matchedCount === matchState.totalPairs) {
+      matchState.completed = true;
+      completeCurrentQuestion();
+    } else {
+      fb.textContent = '✨ تطابق صحيح! أحسنت';
+      fb.className = 'feedback correct';
+    }
+  } else {
+    matchState.locked = true;
+    firstBtn.classList.add('wrong-shake');
+    btnEl.classList.add('wrong-shake');
+    fb.textContent = '❌ البطاقتان غير متطابقتين، حاول مرة أخرى!';
+    fb.className = 'feedback wrong';
+
+    setTimeout(() => {
+      firstBtn.classList.remove('selected', 'wrong-shake');
+      btnEl.classList.remove('wrong-shake');
+      matchState.selectedUid = null;
+      matchState.locked = false;
+    }, 420);
+  }
+}
+
+// ==========================================
+// 3-Stage Ordering Challenge
+// ==========================================
+let orderState = null;
+
+function generateOrderingStage(direction) {
+  const pool = [
+    48, 64, 73, 85, 95, 112, 125, 148, 174, 205, 215, 268, 310, 384, 429, 512, 640, 725, 819, 904
+  ];
+  const picked = shuffleArray(pool).slice(0, 4);
+  const sorted = [...picked].sort((a, b) => direction === 'asc' ? a - b : b - a);
+  return {
+    direction,
+    cards: picked,
+    expectedOrder: sorted
+  };
+}
+
+function initOrderingChallenge() {
+  const directions = shuffleArray(['asc', 'desc', Math.random() < 0.5 ? 'asc' : 'desc']);
+  orderState = {
+    stages: directions.map(dir => generateOrderingStage(dir)),
+    stageIndex: 0,
+    completed: false
+  };
+  renderOrderingStage();
+}
+
+function renderOrderingStage() {
+  const stageBar = document.getElementById('orderStageBar');
+  const promptBanner = document.getElementById('orderPromptBanner');
+  const cardsRow = document.getElementById('orderCardsRow');
+  const inputsRow = document.getElementById('orderInputsRow');
+  const fb = document.getElementById('feedback');
+
+  stageBar.innerHTML = '';
+  orderState.stages.forEach((st, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'stage-pill';
+    if (idx < orderState.stageIndex) pill.classList.add('done');
+    else if (idx === orderState.stageIndex) pill.classList.add('active');
+    const dirLabel = st.direction === 'asc' ? 'من الأصغر إلى الأكبر' : 'من الأكبر إلى الأصغر';
+    pill.textContent = `المرحلة ${toArabicDigits(idx + 1)} (${dirLabel})`;
+    stageBar.appendChild(pill);
+  });
+
+  const currentStage = orderState.stages[orderState.stageIndex];
+  const dirText = currentStage.direction === 'asc'
+    ? 'رتّب الأعداد الآتية من الأصغر إلى الأكبر واكتبها في المربعات:'
+    : 'رتّب الأعداد الآتية من الأكبر إلى الأصغر واكتبها في المربعات:';
+
+  promptBanner.textContent = `${toArabicDigits(orderState.stageIndex + 1)}) ${dirText}`;
+  fb.textContent = '';
+  fb.className = 'feedback';
+
+  cardsRow.innerHTML = '';
+  inputsRow.innerHTML = '';
+
+  const slotTitles = ['الأول', 'الثاني', 'الثالث', 'الرابع'];
+
+  currentStage.cards.forEach(num => {
+    const card = document.createElement('div');
+    card.className = 'order-number-card';
+    card.textContent = toArabicDigits(num);
+    cardsRow.appendChild(card);
+  });
+
+  for (let i = 0; i < currentStage.cards.length; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'order-slot-wrap';
+
+    const lbl = document.createElement('span');
+    lbl.className = 'order-slot-label';
+    lbl.textContent = `العدد ${slotTitles[i]}`;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.className = 'order-text-box';
+    input.dataset.slot = String(i);
+    input.placeholder = 'اكتب هنا';
+    input.addEventListener('keypress', e => {
+      if (e.key === 'Enter') checkOrderingStage();
+    });
+
+    wrap.appendChild(lbl);
+    wrap.appendChild(input);
+    inputsRow.appendChild(wrap);
+  }
+
+  setTimeout(() => {
+    const firstInput = inputsRow.querySelector('.order-text-box');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+function checkOrderingStage() {
+  if (!orderState || orderState.completed) return;
+  const currentStage = orderState.stages[orderState.stageIndex];
+  const inputs = Array.from(document.querySelectorAll('.order-text-box'));
+  const fb = document.getElementById('feedback');
+
+  inputs.forEach(inp => inp.classList.remove('box-error'));
+
+  const userNums = inputs.map(inp => parseFlexibleNumber(inp.value));
+  if (userNums.some(n => isNaN(n))) {
+    inputs.forEach((inp, idx) => {
+      if (isNaN(userNums[idx])) inp.classList.add('box-error');
+    });
+    fb.textContent = '⚠️ اكتب رقمًا صحيحًا في جميع المربعات الأربعة';
+    fb.className = 'feedback wrong';
+    return;
+  }
+
+  const sortedUser = [...userNums].sort((a, b) => a - b);
+  const sortedGiven = [...currentStage.cards].sort((a, b) => a - b);
+  const sameMultiset = sortedUser.every((val, idx) => val === sortedGiven[idx]);
+
+  if (!sameMultiset) {
+    inputs.forEach(inp => inp.classList.add('box-error'));
+    fb.textContent = '⚠️ تأكد من كتابة نفس الأعداد الأربعة المعروضة في البطاقات!';
+    fb.className = 'feedback wrong';
+    return;
+  }
+
+  const isCorrectOrder = userNums.every((val, idx) => val === currentStage.expectedOrder[idx]);
+
+  if (isCorrectOrder) {
+    if (orderState.stageIndex < orderState.stages.length - 1) {
+      fb.textContent = `✅ أحسنت! اكتملت المرحلة ${toArabicDigits(orderState.stageIndex + 1)}، جاري فتح المرحلة التالية...`;
+      fb.className = 'feedback correct';
+      setTimeout(() => {
+        orderState.stageIndex++;
+        renderOrderingStage();
+      }, 950);
+    } else {
+      orderState.completed = true;
+      completeCurrentQuestion();
+    }
+  } else {
+    inputs.forEach(inp => inp.classList.add('box-error'));
+    fb.textContent = '❌ الترتيب غير صحيح، راجع الاتجاه المطلوب وحاول مرة أخرى!';
+    fb.className = 'feedback wrong';
+  }
+}
+
+const questions = [
+  {
+    title:"🪟 النافذة اليسرى",
+    type: "placevalue",
+    q:"تحدي القيمة المنزلية (٥ مراحل متدرجة): أجب عن كل مرحلة لتنتقل تلقائيًا إلى المرحلة التالية."
+  },
+  {
+    title:"🪑 الكرسي الخشبي الأيسر",
+    q:"يستطيع المقعد تحمّل وزن أقصاه ٢٥٠ كجم، وجلس عليه فارسان وزن كل منهما ٨٥ كجم. كم كجم لا يزال بإمكانه تحمّله؟",
+    a:80
+  },
+  {
+    title:"🔥 الشعلة",
+    q:"تستهلك الشعلة ٢٥ مل من الزيت صباحًا و٣٥ مل مساءً كل يوم. كم ملّ تستهلك في ٤ أيام؟",
+    choices: [
+      { label: "أ- ٢١٠", value: 210 },
+      { label: "ب- ٢٢٠", value: 220 },
+      { label: "ج- ٢٤٠", value: 240 },
+      { label: "د- ٢٦٠", value: 260 }
+    ],
+    a:240
+  },
+  {
+    title:"🪵 المقعد الخشبي الأمامي الأيسر",
+    type: "ordering",
+    q:"تحدي ترتيب الأعداد (٣ مراحل): اكتب الأعداد مرتبة في المربعات النصية لتفتح المرحلة التالية."
+  },
+  {
+    title:"🖼️ اللوحة الجدارية اليسرى",
+    type: "factors",
+    q:"تحدي عوامل ٣ أرقام: اختر جميع عوامل كل عدد بالضغط على المربعات الصحيحة للانتقال إلى العدد التالي."
+  },
+  {
+    title:"🕯️ الثريا السفلية",
+    q:"يضم الشمعدان ٦ شمعات، وتضيء كل شمعة لمدة ٤٥ دقيقة. كم دقيقة تضيء الشمعات الست معًا؟",
+    choices: [
+      { label: "أ- ٢٢٥", value: 225 },
+      { label: "ب- ٢٥٠", value: 250 },
+      { label: "ج- ٢٧٠", value: 270 },
+      { label: "د- ٣٠٠", value: 300 }
+    ],
+    a:270
+  },
+  {
+    title:"🔥 الموقد المشتعل",
+    type: "matching",
+    q:"لعبة مطابقة بطاقات الضرب: طابق كل بطاقة عملية ضرب مع بطاقة الناتج الصحيحة الخاصة بها."
+  },
+  {
+    title:"🧶 السجادة الوسطى",
+    q:"تحتوي الخزانة على ٩٦ جرة، فُتح منها ثلث الجرار فقط. كم جرة فُتحت؟",
+    a:32
+  },
+  {
+    title:"🍽️ المائدة اليمنى",
+    type: "algebra",
+    q:"تحدي الأنماط والجبر (٤ مراحل): اختر التعبير أو الجملة العددية الصحيحة في كل مرحلة للانتقال إلى المرحلة التالية."
+  },
+  {
+    title:"🏰 اللوحة الجدارية الكبيرة اليمنى",
+    type: "nearest",
+    q:"العدد الأقرب إلى ٦٧٥٣ هو:",
+    choices: [
+      { label: "أ- ٦٧٦٠", value: 6760 },
+      { label: "ب- ٦٧٥٠٠", value: 67500 },
+      { label: "ج- ٧٠٠٠", value: 7000 },
+      { label: "د- ٦٨٠٠", value: 6800 }
+    ],
+    a:6760
+  }
+];
+
+let currentQ = null;
+let selectedChoice = null;
+let isEnteringRoom = false;
+let tickStarted = false;
+const solved = new Set();
+const correctSound = document.getElementById('correctSound');
+const hooraySound = document.getElementById('hooraySound');
+const doorSound = document.getElementById('doorSound');
+const loseSound = document.getElementById('loseSound');
+const timeTickSound = document.getElementById('timeTickSound');
+
+function stopTimeTick() {
+  timeTickSound.pause();
+  timeTickSound.currentTime = 0;
+}
+
+function openLightbox(src) {
+  if (!src) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+
+// 10-Minute Timer Logic
+let timeLeft = 10 * 60; // 600 seconds
+const timerDisplay = document.getElementById('timerDisplay');
+const timerBox = document.getElementById('timerBox');
+
+const timerInterval = setInterval(() => {
+  if (solved.size === 10) {
+    clearInterval(timerInterval);
+    stopTimeTick();
+    return;
+  }
+
+  timeLeft--;
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  if (timeLeft <= 2 * 60 && timeLeft > 0 && !tickStarted) {
+    tickStarted = true;
+    timeTickSound.currentTime = 0;
+    timeTickSound.play().catch(() => {});
+  }
+
+  if (timeLeft <= 60) {
+    timerBox.classList.add('warning');
+  }
+
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    stopTimeTick();
+    closeLightbox();
+    closeModal();
+    document.getElementById('finalScoreText').textContent = `لقد أجبت على ${solved.size} من 10 أسئلة!`;
+    document.getElementById('timeUpMessage').classList.add('active');
+    loseSound.currentTime = 0;
+    loseSound.play().catch(() => {});
+  }
+}, 1000);
+
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', () => {
+    const idx = +h.dataset.q;
+    if (h.classList.contains('solved')) return;
+    currentQ = idx;
+    selectedChoice = null;
+
+    const item = questions[idx];
+    if (item.type === 'nearest') {
+      const generated = generateNearestNumberQuestion();
+      item.q = generated.q;
+      item.choices = generated.choices;
+      item.a = generated.a;
+    }
+    const modalBox = document.getElementById('modalBox');
+    const qBox = document.getElementById('questionBox');
+    const qImg = document.getElementById('questionImage');
+    const zoomHint = document.getElementById('zoomHint');
+    const ansInput = document.getElementById('answerInput');
+    const choicesBox = document.getElementById('choicesContainer');
+    const factorBox = document.getElementById('factorChallengeBox');
+    const matchBox = document.getElementById('multiplicationMatchBox');
+    const orderBox = document.getElementById('orderingChallengeBox');
+    const pvBox = document.getElementById('placeValueChallengeBox');
+    const algBox = document.getElementById('algebraChallengeBox');
+    const checkBtn = document.getElementById('checkBtn');
+
+    document.getElementById('modalTitle').textContent = item.title;
+    document.getElementById('questionText').textContent = item.q;
+
+    if (item.img) {
+      modalBox.classList.add('has-image');
+      qBox.classList.add('image-mode');
+      qImg.src = item.img;
+      qImg.style.display = 'block';
+      zoomHint.style.display = 'block';
+    } else {
+      modalBox.classList.remove('has-image');
+      qBox.classList.remove('image-mode');
+      qImg.style.display = 'none';
+      zoomHint.style.display = 'none';
+      qImg.src = '';
+    }
+
+    modalBox.classList.remove('has-factors', 'has-matching', 'has-ordering', 'has-placevalue', 'has-algebra');
+    factorBox.style.display = 'none';
+    matchBox.style.display = 'none';
+    orderBox.style.display = 'none';
+    pvBox.style.display = 'none';
+    algBox.style.display = 'none';
+
+    if (item.type === 'algebra') {
+      modalBox.classList.add('has-algebra');
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'none';
+      checkBtn.style.display = 'inline-block';
+      algBox.style.display = 'block';
+      initAlgebraChallenge();
+    } else if (item.type === 'placevalue') {
+      modalBox.classList.add('has-placevalue');
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'none';
+      checkBtn.style.display = 'inline-block';
+      pvBox.style.display = 'block';
+      initPlaceValueChallenge();
+    } else if (item.type === 'factors') {
+      modalBox.classList.add('has-factors');
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'none';
+      checkBtn.style.display = 'none';
+      factorBox.style.display = 'block';
+      initFactorChallenge();
+    } else if (item.type === 'matching') {
+      modalBox.classList.add('has-matching');
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'none';
+      checkBtn.style.display = 'none';
+      matchBox.style.display = 'block';
+      initMultiplicationMatch();
+    } else if (item.type === 'ordering') {
+      modalBox.classList.add('has-ordering');
+      ansInput.style.display = 'none';
+      choicesBox.style.display = 'none';
+      checkBtn.style.display = 'inline-block';
+      orderBox.style.display = 'block';
+      initOrderingChallenge();
+    } else {
+      checkBtn.style.display = 'inline-block';
+
+      if (item.choices && item.choices.length > 0) {
+        ansInput.style.display = 'none';
+        choicesBox.style.display = 'grid';
+        choicesBox.innerHTML = '';
+
+        item.choices.forEach(choice => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'choice-btn';
+          btn.textContent = choice.label;
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedChoice = choice.value;
+          });
+          choicesBox.appendChild(btn);
+        });
+      } else {
+        choicesBox.style.display = 'none';
+        choicesBox.innerHTML = '';
+        ansInput.style.display = 'inline-block';
+        ansInput.value = '';
+        setTimeout(() => ansInput.focus(), 120);
+      }
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = 'feedback';
+    }
+
+    document.getElementById('modal').classList.add('active');
+  });
+});
+
+function completeCurrentQuestion() {
+  const fb = document.getElementById('feedback');
+  correctSound.currentTime = 0;
+  correctSound.play().catch(() => {});
+  fb.textContent = '✅ إجابة صحيحة! أحسنت 🌟';
+  fb.className = 'feedback correct';
+  solved.add(currentQ);
+  document.querySelector('.hotspot[data-q="' + currentQ + '"]').classList.add('solved');
+  setTimeout(closeModal, 1400);
+  if (solved.size === 10) {
+    clearInterval(timerInterval);
+    stopTimeTick();
+    setTimeout(() => {
+      document.getElementById('winMessage').classList.add('active');
+      hooraySound.currentTime = 0;
+      hooraySound.play().catch(() => {});
+    }, 600);
+  }
+}
+
+function checkAnswer(){
+  const item = questions[currentQ];
+  if (!item || item.type === 'factors' || item.type === 'matching') return;
+  if (item.type === 'ordering') {
+    checkOrderingStage();
+    return;
+  }
+  if (item.type === 'algebra') {
+    checkAlgebraStage();
+    return;
+  }
+  if (item.type === 'placevalue') {
+    checkPlaceValueStage();
+    return;
+  }
+
+  const fb = document.getElementById('feedback');
+  let v;
+
+  if (item.choices && item.choices.length > 0) {
+    if (selectedChoice === null) {
+      fb.textContent = '⚠️ اختر إحدى الإجابات أولًا';
+      fb.className = 'feedback wrong';
+      return;
+    }
+    v = selectedChoice;
+  } else {
+    v = parseFlexibleNumber(document.getElementById('answerInput').value);
+    if (isNaN(v)) {
+      fb.textContent = '⚠️ أدخل رقمًا صحيحًا';
+      fb.className = 'feedback wrong';
+      return;
+    }
+  }
+
+  if (v === item.a) {
+    completeCurrentQuestion();
+  } else {
+    fb.textContent='❌ حاول مرة أخرى!'; fb.className='feedback wrong';
+  }
+}
+
+function enterNextRoom() {
+  if (isEnteringRoom) return;
+  isEnteringRoom = true;
+  stopTimeTick();
+
+  const btn = document.getElementById('enterRoomBtn');
+  if (btn) btn.disabled = true;
+
+  const navigate = () => {
+    window.location.href = NEXT_ROOM_URL;
+  };
+
+  doorSound.currentTime = 0;
+  doorSound.onended = navigate;
+  doorSound.onerror = navigate;
+
+  doorSound.play().catch(navigate);
+  setTimeout(navigate, 2500);
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('active'); }
+document.getElementById('answerInput').addEventListener('keypress', e=>{ if(e.key==='Enter') checkAnswer(); });
+document.getElementById('pvTextInput').addEventListener('keypress', e=>{ if(e.key==='Enter') checkPlaceValueStage(); });
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+// Optional coordinate helper for fine-tuning hotspot positions: add ?edit=1 or press Ctrl/Cmd + E
+const coordHelper = document.getElementById('coordHelper');
+let editMode = new URLSearchParams(location.search).get('edit') === '1';
+if (editMode) coordHelper.classList.add('active');
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+    e.preventDefault();
+    editMode = !editMode;
+    coordHelper.classList.toggle('active', editMode);
+  }
+});
+
+document.getElementById('gameContainer').addEventListener('click', e => {
+  if (!editMode || e.target.classList.contains('hotspot')) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const leftPct = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+  const topPct = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+  const snippet = `top:${topPct}%;left:${leftPct}%;`;
+  coordHelper.textContent = `Copied: ${snippet}`;
+  navigator.clipboard?.writeText(snippet).catch(() => {});
+});
+</script>
+</body>
+</html>
