@@ -425,12 +425,29 @@ let currentQ = null;
 let selectedChoice = null;
 let isEnteringRoom = false;
 let tickStarted = false;
+let keyRewardSent = false;
 const solved = new Set();
 const correctSound = document.getElementById('correctSound');
 const hooraySound = document.getElementById('hooraySound');
 const doorSound = document.getElementById('doorSound');
 const loseSound = document.getElementById('loseSound');
 const timeTickSound = document.getElementById('timeTickSound');
+
+function notifyKeyRewardEarned() {
+  if (keyRewardSent) return;
+  keyRewardSent = true;
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'KEY_REWARD',
+        game: 1,
+        score: solved.size
+      }, '*');
+    }
+  } catch (err) {
+    console.warn('Failed to post KEY_REWARD message to parent:', err);
+  }
+}
 
 function stopTimeTick() {
   timeTickSound.pause();
@@ -581,6 +598,7 @@ function checkAnswer(){
     if (solved.size === 10) {
       clearInterval(timerInterval);
       stopTimeTick();
+      notifyKeyRewardEarned();
       setTimeout(() => {
         document.getElementById('winMessage').classList.add('active');
         hooraySound.currentTime = 0;
@@ -596,6 +614,7 @@ function enterNextRoom() {
   if (isEnteringRoom) return;
   isEnteringRoom = true;
   stopTimeTick();
+  notifyKeyRewardEarned();
 
   const btn = document.getElementById('enterRoomBtn');
   if (btn) btn.disabled = true;
