@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة ألعاب الرياضيات التفاعلية</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-dark: #0f172a;
+            --surface: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background-color: var(--surface);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 10;
+        }
+        .brand {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #38bdf8;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            background-color: #334155;
+            color: var(--text-light);
+            border: 1px solid #475569;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #475569;
+        }
+        button.btn-sync {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: #064e3b;
+            font-weight: bold;
+        }
+        button.btn-sync:hover {
+            background-color: #059669;
+            color: white;
+        }
+        .hud-bar {
+            background-color: #162032;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #1e293b;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .hud-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background-color: #334155;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .badge strong {
+            color: #38bdf8;
+        }
+        .hud-input {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            width: 55px;
+            text-align: center;
+        }
+        .hud-text-input {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            width: 120px;
+        }
+        main {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #ffffff;
+        }
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--surface);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border-right: 4px solid var(--success);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 100;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">🎮 بوابة تحديات الرياضيات</div>
+        <div class="header-actions">
+            <button onclick="resetNewAttempt()">🔄 محاولة جديدة</button>
+            <button class="btn-sync" onclick="submitScoresToSheet(true)">💾 حفظ وإرسال النتائج</button>
+        </div>
+    </header>
+
+    <div class="hud-bar">
+        <div class="hud-group">
+            <span>الطالب: <input type="text" id="hud-name" class="hud-text-input" placeholder="اسم الطالب" onchange="updateStudentInfo()"></span>
+            <span>الصف: <input type="text" id="hud-grade" class="hud-text-input" style="width:80px" placeholder="الصف" onchange="updateStudentInfo()"></span>
+            <span>المدرسة: <input type="text" id="hud-school" class="hud-text-input" placeholder="اسم المدرسة" onchange="updateStudentInfo()"></span>
+        </div>
+        <div class="hud-group">
+            <span>اللعبة 1: <input type="number" id="hud-g1" class="hud-input" value="0" min="0" onchange="recalculateTotal()"></span>
+            <span>اللعبة 2: <input type="number" id="hud-g2" class="hud-input" value="0" min="0" onchange="recalculateTotal()"></span>
+            <span>اللعبة 3: <input type="number" id="hud-g3" class="hud-input" value="0" min="0" onchange="recalculateTotal()"></span>
+            <span class="badge">المجموع: <strong id="hud-total">0</strong></span>
+            <span class="badge">المحاولات: <strong id="hud-attempts">1</strong></span>
+        </div>
+    </div>
+
+    <main>
+        <iframe id="game-frame" src="https://talented-nation.github.io/behaviour/fun/login.html" allow="fullscreen"></iframe>
+    </main>
+
+    <div id="toast"></div>
+
+    <script>
+        // =========================================================================
+        // CONFIGURATION: Deployed Google Apps Script Web App URL
+        // =========================================================================
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLPBUZtTbkrqKmKCm-rpdfCv63xqYrGtFcaKsM_Te-7u7NZhDPdCZsOUTX5OYm0Ixl/exec";
+
+        const PAGES = {
+            login: "https://talented-nation.github.io/behaviour/fun/login.html",
+            hallway: "https://talented-nation.github.io/behaviour/fun/hallway.html",
+            game1: "https://talented-nation.github.io/behaviour/fun/armor.html",
+            game2: "https://talented-nation.github.io/behaviour/fun/dining.html",
+            game3: "https://talented-nation.github.io/behaviour/fun/study.html"
+        };
+
+        function generateSessionId() {
+            return 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        }
+
+        // Session State
+        let studentState = {
+            sessionId: generateSessionId(),
+            attemptDate: new Date().toLocaleString('en-GB'),
+            studentName: "",
+            grade: "",
+            schoolName: "",
+            game1Score: 0,
+            game2Score: 0,
+            game3Score: 0,
+            totalScore: 0,
+            attempts: 1
+        };
+
+        // Load saved progress from localStorage if available
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('math_game_tracker_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    studentState = { ...studentState, ...parsed };
+                    if (!studentState.sessionId) studentState.sessionId = generateSessionId();
+                    syncInputsFromState();
+                } catch (e) {
+                    console.error("Failed to parse saved state", e);
+                }
+            }
+        });
+
+        function saveState() {
+            localStorage.setItem('math_game_tracker_state', JSON.stringify(studentState));
+        }
+
+        function syncInputsFromState() {
+            document.getElementById('hud-name').value = studentState.studentName || "";
+            document.getElementById('hud-grade').value = studentState.grade || "";
+            document.getElementById('hud-school').value = studentState.schoolName || "";
+            document.getElementById('hud-g1').value = studentState.game1Score || 0;
+            document.getElementById('hud-g2').value = studentState.game2Score || 0;
+            document.getElementById('hud-g3').value = studentState.game3Score || 0;
+            document.getElementById('hud-total').textContent = studentState.totalScore || 0;
+            document.getElementById('hud-attempts').textContent = studentState.attempts || 1;
+        }
+
+        function updateStudentInfo() {
+            studentState.studentName = document.getElementById('hud-name').value.trim();
+            studentState.grade = document.getElementById('hud-grade').value.trim();
+            studentState.schoolName = document.getElementById('hud-school').value.trim();
+            saveState();
+        }
+
+        function recalculateTotal() {
+            studentState.game1Score = Number(document.getElementById('hud-g1').value) || 0;
+            studentState.game2Score = Number(document.getElementById('hud-g2').value) || 0;
+            studentState.game3Score = Number(document.getElementById('hud-g3').value) || 0;
+            studentState.totalScore = studentState.game1Score + studentState.game2Score + studentState.game3Score;
+            document.getElementById('hud-total').textContent = studentState.totalScore;
+            saveState();
+        }
+
+        function resetNewAttempt() {
+            studentState.sessionId = generateSessionId();
+            studentState.attemptDate = new Date().toLocaleString('en-GB');
+            studentState.game1Score = 0;
+            studentState.game2Score = 0;
+            studentState.game3Score = 0;
+            studentState.totalScore = 0;
+            studentState.attempts = (Number(studentState.attempts) || 1) + 1;
+            syncInputsFromState();
+            saveState();
+            document.getElementById('game-frame').src = PAGES.login;
+            showToast("تم بدء محاولة جديدة رقم " + studentState.attempts);
+        }
+
+        // Listen for postMessage events from embedded games
+        // Supports both 'GAME_SCORE' and 'KEY_REWARD' events
+        window.addEventListener('message', (event) => {
+            if (event.origin !== "https://talented-nation.github.io") return;
+
+            const data = event.data;
+            if (!data || typeof data !== 'object') return;
+
+            if (data.type === 'LOGIN_DATA') {
+                if (data.studentName) studentState.studentName = data.studentName;
+                if (data.grade) studentState.grade = data.grade;
+                if (data.schoolName) studentState.schoolName = data.schoolName;
+                studentState.attemptDate = new Date().toLocaleString('en-GB');
+                syncInputsFromState();
+                saveState();
+                showToast("تم تسجيل بيانات الطالب: " + studentState.studentName);
+            }
+
+            if (data.type === 'GAME_SCORE' || data.type === 'KEY_REWARD') {
+                const gameNum = Number(data.game);
+                const scoreVal = Number(data.score) || 0;
+                if (gameNum === 1) studentState.game1Score = scoreVal;
+                if (gameNum === 2) studentState.game2Score = scoreVal;
+                if (gameNum === 3) studentState.game3Score = scoreVal;
+
+                studentState.totalScore = studentState.game1Score + studentState.game2Score + studentState.game3Score;
+                syncInputsFromState();
+                saveState();
+                showToast(`🔑 تم الحصول على المفتاح! جاري حفظ درجة اللعبة ${gameNum} تلقائياً...`);
+                
+                // Automatically record score in Google Spreadsheet game-by-game
+                submitScoresToSheet(false);
+            }
+
+            if (data.type === 'INCREMENT_ATTEMPT') {
+                studentState.attempts += 1;
+                syncInputsFromState();
+                saveState();
+            }
+        });
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.borderRightColor = isError ? 'var(--danger)' : 'var(--success)';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
+        async function submitScoresToSheet(isManual = false) {
+            updateStudentInfo();
+            recalculateTotal();
+
+            if (!studentState.studentName) {
+                if (isManual) showToast("يرجى إدخال اسم الطالب قبل الحفظ.", true);
+                return;
+            }
+
+            const payload = {
+                sessionId: studentState.sessionId,
+                attemptDate: studentState.attemptDate,
+                studentName: studentState.studentName,
+                grade: studentState.grade,
+                schoolName: studentState.schoolName,
+                game1Score: studentState.game1Score,
+                game2Score: studentState.game2Score,
+                game3Score: studentState.game3Score,
+                totalScore: studentState.totalScore,
+                attempts: studentState.attempts
+            };
+
+            try {
+                if (isManual) showToast("جاري إرسال الدرجات إلى Google Sheets...");
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                saveState();
+                showToast("✅ تم تحديث وحفظ النتيجة في جدول البيانات تلقائياً!");
+            } catch (error) {
+                console.error("Error submitting scores:", error);
+                showToast("❌ حدث خطأ أثناء الإرسال. تأكد من الاتصال بالإنترنت.", true);
+            }
+        }
+    </script>
+</body>
+</html>
