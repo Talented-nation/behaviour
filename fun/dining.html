@@ -385,7 +385,7 @@
     animation: cellShake 0.35s ease;
   }
 
-  /* Ordering Numbers Challenge (3 sequential stages with text boxes instead of lines/drag) */
+  /* Ordering Numbers 3-stage challenge with text inputs */
   .order-prompt-banner {
     font-size: 1.25em;
     font-weight: bold;
@@ -663,21 +663,18 @@ function shuffleArray(arr) {
 }
 
 function generateNearestNumberQuestion() {
-  // Exact same pattern as: العدد الأقرب إلى 6753 -> {6760, 67500, 7000, 6800}
-  const presets = [6753];
   const thousands = randInt(2, 8);
-  const hundreds = randInt(5, 8); // ensures rounding to thousand goes up cleanly (e.g., 6753 -> 7000)
+  const hundreds = randInt(5, 8);
   const tens = randInt(2, 8);
-  const ones = randInt(1, 4);     // ensures ceil to next ten is strictly different from floor*100
+  const ones = randInt(1, 4);
   const generated = thousands * 1000 + hundreds * 100 + tens * 10 + ones;
 
-  // Pick either the generated number or occasionally the classic 6753 pattern, always generating fresh numbers on reload/reopen
   const target = generated;
 
-  const correct = Math.ceil(target / 10) * 10;          // e.g. 6760 (العدد الأقرب)
-  const extraZero = Math.floor(target / 10) * 100;      // e.g. 67500
-  const nearestThousand = Math.round(target / 1000) * 1000; // e.g. 7000
-  const nearestHundred = Math.round(target / 100) * 100;    // e.g. 6800
+  const correct = Math.ceil(target / 10) * 10;
+  const extraZero = Math.floor(target / 10) * 100;
+  const nearestThousand = Math.round(target / 1000) * 1000;
+  const nearestHundred = Math.round(target / 100) * 100;
 
   const options = shuffleArray([correct, extraZero, nearestThousand, nearestHundred]);
   const letters = ['أ', 'ب', 'ج', 'د'];
@@ -698,8 +695,6 @@ function generateNearestNumberQuestion() {
 let algState = null;
 
 function generateAlgebraStages() {
-  // Stage 1: Model 1 from image - Multi-step numerical expression
-  // Example: لدى الطاهي ٤٠ حبة تمر، فإذا وزّع على ٥ أطباق ٤ حبات في كل طبق. ما التعبير الذي يمثل عدد حبات التمر المتبقية؟ => ٤٠ - (٥ × ٤)
   const s1Scenarios = [
     () => {
       const total = pickRandom([40, 45, 50, 60]);
@@ -732,8 +727,6 @@ function generateAlgebraStages() {
   ];
   const s1 = pickRandom(s1Scenarios)();
 
-  // Stage 2: Model 2 from image - Equation with variable (م)
-  // Example: على المائدة ٥٠ فطيرة، أكل الضيوف بعضًا منها وتبقى ٢٠ فطيرة. أيّ جملة عددية من التالي توضح ذلك؟ حيث (م) تمثل ما أكله الضيوف => ٥٠ - م = ٢٠
   const total2 = pickRandom([30, 40, 50, 60]);
   const rem2 = pickRandom([12, 15, 20, 25]);
   const correct2 = `${toArabicDigits(total2)} - م = ${toArabicDigits(rem2)}`;
@@ -746,8 +739,6 @@ function generateAlgebraStages() {
     options: shuffleArray([correct2, d2_1, d2_2, d2_3])
   };
 
-  // Stage 3: Model 3 from image - Algebraic expression with symbol (▲)
-  // Example: يمثل الشكل ▲ عدد الملاعق الموجودة على المائدة. أضاف الخادم ٣ ملاعق إضافية. ما هو عدد الملاعق الآن؟ => ▲ + ٣
   const add3 = pickRandom([3, 4, 5, 6]);
   const correct3 = `▲ + ${toArabicDigits(add3)}`;
   const d3_1 = `${toArabicDigits(add3)} ÷ ▲`;
@@ -759,8 +750,6 @@ function generateAlgebraStages() {
     options: shuffleArray([correct3, d3_1, d3_2, d3_3])
   };
 
-  // Stage 4: Model 4 from image - Multiplicative comparison / inverse division
-  // Example: في الإبريق الكبير ٨٠ كوبًا من العصير، وهو يساوي ٤ أضعاف ما في الإبريق الصغير. أيّ مما يلي يمكن استخدامه لمعرفة عدد الأكواب في الإبريق الصغير؟ => ٨٠ ÷ ٤
   const mult4 = pickRandom([3, 4, 5]);
   const base4 = pickRandom([15, 20, 25]);
   const big4 = mult4 * base4;
@@ -903,7 +892,6 @@ function hundredsArabicPhrase(h) {
 }
 
 function generatePlaceValueStages() {
-  // Stage 1: Expanded form with missing tens place (e.g. 9 آلاف + 3 مئات + 8 وحدات => 9308)
   const k1 = randInt(3, 9);
   const h1 = randInt(2, 9);
   let u1 = randInt(2, 9);
@@ -911,10 +899,10 @@ function generatePlaceValueStages() {
 
   const ans1 = k1 * 1000 + h1 * 100 + u1;
   const distractors1 = shuffleArray([
-    k1 * 1000 + h1 * 10 + u1,          // e.g. 9038
-    k1 * 1000 + u1 * 100 + h1,          // e.g. 9803
-    k1 * 1000 + h1 * 100 + u1 * 10,     // e.g. 9380
-    h1 * 1000 + k1 * 100 + u1           // e.g. 3908
+    k1 * 1000 + h1 * 10 + u1,
+    k1 * 1000 + u1 * 100 + h1,
+    k1 * 1000 + h1 * 100 + u1 * 10,
+    h1 * 1000 + k1 * 100 + u1
   ]).slice(0, 3);
 
   const stage1 = {
@@ -924,8 +912,7 @@ function generatePlaceValueStages() {
     answer: ans1
   };
 
-  // Stage 2: 5-digit number with zero thousands (e.g. 3 آحاد + 5 عشرات + 4 مئات + 60 ألفًا => 60453)
-  const tt2 = randInt(2, 9); // tens of thousands (20..90 ألفًا)
+  const tt2 = randInt(2, 9);
   const h2 = randInt(2, 9);
   let t2 = randInt(2, 9);
   while (t2 === h2) t2 = randInt(2, 9);
@@ -934,10 +921,10 @@ function generatePlaceValueStages() {
 
   const ans2 = tt2 * 10000 + h2 * 100 + t2 * 10 + u2;
   const distractors2 = shuffleArray([
-    tt2 * 1000 + h2 * 100 + t2 * 10 + u2,    // 6453 (missed 0 in thousands)
-    tt2 * 10000 + h2 * 1000 + t2 * 10 + u2,  // 64053
-    tt2 * 10000 + h2 * 100 + u2 * 10 + t2,   // 60435
-    tt2 * 10000 + t2 * 100 + h2 * 10 + u2    // 60543
+    tt2 * 1000 + h2 * 100 + t2 * 10 + u2,
+    tt2 * 10000 + h2 * 1000 + t2 * 10 + u2,
+    tt2 * 10000 + h2 * 100 + u2 * 10 + t2,
+    tt2 * 10000 + t2 * 100 + h2 * 10 + u2
   ]).slice(0, 3);
 
   const stage2 = {
@@ -947,7 +934,6 @@ function generatePlaceValueStages() {
     answer: ans2
   };
 
-  // Stage 3: Identify number where digit D has value D*100 (or D*1000)
   const targetDigit = pickRandom([4, 6, 7, 8, 9]);
   const isThousandsTarget = Math.random() < 0.45;
   const targetValue = isThousandsTarget ? targetDigit * 1000 : targetDigit * 100;
@@ -958,20 +944,18 @@ function generatePlaceValueStages() {
 
   let ans3, dist3;
   if (isThousandsTarget) {
-    // targetDigit must be in thousands place
     ans3 = targetDigit * 1000 + dA * 100 + dB;
     dist3 = [
-      dA * 1000 + targetDigit * 100 + dB * 10 + dC, // hundreds place
-      dA * 1000 + dB * 100 + targetDigit * 10 + dC, // tens place
-      dA * 10000 + dB * 1000 + targetDigit * 100 + dC // hundreds in 5-digit
+      dA * 1000 + targetDigit * 100 + dB * 10 + dC,
+      dA * 1000 + dB * 100 + targetDigit * 10 + dC,
+      dA * 10000 + dB * 1000 + targetDigit * 100 + dC
     ];
   } else {
-    // targetDigit must be in hundreds place
     ans3 = dA * 1000 + targetDigit * 100 + dB;
     dist3 = [
-      targetDigit * 1000 + dA * 100 + dB * 10 + dC, // thousands place
-      dA * 1000 + dB * 100 + targetDigit * 10 + dC, // tens place
-      dA * 1000 + dB * 100 + dC * 10 + targetDigit  // ones place
+      targetDigit * 1000 + dA * 100 + dB * 10 + dC,
+      dA * 1000 + dB * 100 + targetDigit * 10 + dC,
+      dA * 1000 + dB * 100 + dC * 10 + targetDigit
     ];
   }
 
@@ -982,14 +966,11 @@ function generatePlaceValueStages() {
     answer: ans3
   };
 
-  // Stage 4: Text box input - find value of a specific digit in a 6-digit number
   const digits6 = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 5);
-  // Insert one zero in tens or hundreds to raise difficulty
-  const zeroPos = pickRandom([3, 4]); // index 3 = hundreds, index 4 = tens
+  const zeroPos = pickRandom([3, 4]);
   digits6.splice(zeroPos, 0, 0);
   const fullNum4 = Number(digits6.join(''));
 
-  // Pick a non-zero digit from ten-thousands (idx 1), thousands (idx 2), or hundred-thousands (idx 0)
   const chosenIdx = pickRandom([0, 1, 2]);
   const chosenDigit4 = digits6[chosenIdx];
   const placeMultiplier = Math.pow(10, 5 - chosenIdx);
@@ -1001,7 +982,6 @@ function generatePlaceValueStages() {
     answer: ans4
   };
 
-  // Stage 5: Text box input - write number in standard form from word + place description
   const k5 = randInt(3, 9);
   const h5 = randInt(2, 9);
   const rem5 = pickRandom([24, 25, 36, 42, 48, 53, 64, 75, 86, 94]);
@@ -1636,12 +1616,29 @@ let currentQ = null;
 let selectedChoice = null;
 let isEnteringRoom = false;
 let tickStarted = false;
+let keyRewardSent = false;
 const solved = new Set();
 const correctSound = document.getElementById('correctSound');
 const hooraySound = document.getElementById('hooraySound');
 const doorSound = document.getElementById('doorSound');
 const loseSound = document.getElementById('loseSound');
 const timeTickSound = document.getElementById('timeTickSound');
+
+function notifyKeyRewardEarned() {
+  if (keyRewardSent) return;
+  keyRewardSent = true;
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'KEY_REWARD',
+        game: 2,
+        score: solved.size
+      }, '*');
+    }
+  } catch (err) {
+    console.warn('Failed to post KEY_REWARD message to parent:', err);
+  }
+}
 
 function stopTimeTick() {
   timeTickSound.pause();
@@ -1830,6 +1827,7 @@ function completeCurrentQuestion() {
   if (solved.size === 10) {
     clearInterval(timerInterval);
     stopTimeTick();
+    notifyKeyRewardEarned();
     setTimeout(() => {
       document.getElementById('winMessage').classList.add('active');
       hooraySound.currentTime = 0;
@@ -1884,6 +1882,7 @@ function enterNextRoom() {
   if (isEnteringRoom) return;
   isEnteringRoom = true;
   stopTimeTick();
+  notifyKeyRewardEarned();
 
   const btn = document.getElementById('enterRoomBtn');
   if (btn) btn.disabled = true;
