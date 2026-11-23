@@ -409,6 +409,20 @@
           console.warn('تعذر حفظ البيانات في التخزين المحلي:', err);
         }
 
+        // إرسال بيانات الطالب إلى صفحة الماستر (إن كانت مضمنة داخل iframe)
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: 'LOGIN_DATA',
+              studentName,
+              grade: studentClass,
+              schoolName
+            }, '*');
+          }
+        } catch (err) {
+          console.warn('تعذر إرسال البيانات إلى الصفحة الرئيسية:', err);
+        }
+
         // إطلاق حدث مخصص يمكن ربطه بأي سكربت خارجي
         window.dispatchEvent(new CustomEvent('studentLoggedIn', { detail: studentData }));
 
