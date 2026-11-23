@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Mystic Castle — Interactive Exploration</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-void: #07090f;
+      --gold-accent: #f3c86b;
+      --text-light: #f4efe6;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-void);
+      color: var(--text-light);
+      font-family: "Cinzel", "Georgia", "Times New Roman", serif;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Loading Screen */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: radial-gradient(circle at center, #131a2e 0%, #06080e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    .loading-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loading-crest {
+      width: 44px;
+      height: 44px;
+      border: 2px solid rgba(243, 200, 107, 0.45);
+      border-top-color: var(--gold-accent);
+      border-radius: 50%;
+      animation: spinCrest 1.2s linear infinite;
+    }
+
+    .loading-text {
+      letter-spacing: 0.2em;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: var(--gold-accent);
+    }
+
+    .loading-bar-track {
+      width: 220px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--gold-accent);
+      transition: width 0.25s ease;
+    }
+
+    @keyframes spinCrest {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Main Viewport & 2.5D Stage */
+    .viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-void);
+    }
+
+    .webgl-container {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .webgl-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .css-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      perspective: 1100px;
+      transform-style: preserve-3d;
+      overflow: hidden;
+    }
+
+    .scene-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .scene-layer.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .scene-layer.transitioning {
+      visibility: visible;
+      pointer-events: none;
+    }
+
+    /* Aspect-Ratio Preserving Media Plane */
+    .image-plane {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .image-plane img,
+    .image-plane video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+    }
+
+    /* Subtle Atmospheric Overlay Effects */
+    .atmosphere-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .torch-glow {
+      position: absolute;
+      width: 9%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 190, 85, 0.36) 0%,
+        rgba(255, 125, 30, 0.14) 45%,
+        rgba(255, 100, 0, 0) 72%
+      );
+      mix-blend-mode: screen;
+      animation: torchFlicker 2.8s infinite alternate ease-in-out;
+    }
+
+    .torch-glow.warm {
+      width: 7.5%;
+      animation-duration: 2.3s;
+    }
+
+    .window-pulse {
+      position: absolute;
+      width: 5%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 205, 110, 0.25) 0%, transparent 70%);
+      mix-blend-mode: screen;
+      animation: softPulse 4.2s infinite alternate ease-in-out;
+    }
+
+    .magic-aura {
+      position: absolute;
+      width: 19%;
+      height: 44%;
+      transform: translate(-50%, -50%);
+      border-radius: 46% 46% 12% 12%;
+      mix-blend-mode: screen;
+      animation: softPulse 3.4s infinite alternate ease-in-out;
+    }
+
+    .aura-green {
+      background: radial-gradient(circle, rgba(72, 245, 130, 0.18) 0%, transparent 72%);
+    }
+
+    .aura-blue {
+      background: radial-gradient(circle, rgba(75, 165, 255, 0.2) 0%, transparent 72%);
+      animation-delay: 0.9s;
+    }
+
+    .aura-red {
+      background: radial-gradient(circle, rgba(255, 115, 65, 0.18) 0%, transparent 72%);
+      animation-delay: 1.7s;
+    }
+
+    @keyframes torchFlicker {
+      0% {
+        opacity: 0.65;
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+      35% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) scale(1.04);
+      }
+      70% {
+        opacity: 0.72;
+        transform: translate(-50%, -50%) scale(0.98);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.06);
+      }
+    }
+
+    @keyframes softPulse {
+      0% {
+        opacity: 0.55;
+        transform: translate(-50%, -50%) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.04);
+      }
+    }
+
+    /* Interactive Hotspots — Invisible until Hovered */
+    .hotspot {
+      position: absolute;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      outline: none;
+      border-radius: 44% 44% 6% 6%;
+      transition: box-shadow 0.35s ease, background 0.35s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hotspot-arch:hover,
+    .hotspot-arch:focus-visible {
+      background: radial-gradient(
+        ellipse at center,
+        rgba(255, 210, 125, 0.16) 0%,
+        rgba(255, 185, 80, 0.05) 62%,
+        transparent 80%
+      );
+      box-shadow: 0 0 28px rgba(255, 200, 105, 0.32), inset 0 0 22px rgba(255, 215, 140, 0.22);
+    }
+
+    .hotspot-door.door-green:hover,
+    .hotspot-door.door-green:focus-visible {
+      background: radial-gradient(ellipse at center, rgba(70, 245, 130, 0.2) 0%, transparent 76%);
+      box-shadow: 0 0 32px rgba(65, 235, 125, 0.42), inset 0 0 24px rgba(95, 255, 150, 0.25);
+    }
+
+    .hotspot-door.door-blue:hover,
+    .hotspot-door.door-blue:focus-visible {
+      background: radial-gradient(ellipse at center, rgba(70, 165, 255, 0.22) 0%, transparent 76%);
+      box-shadow: 0 0 32px rgba(70, 165, 255, 0.45), inset 0 0 24px rgba(110, 190, 255, 0.28);
+    }
+
+    .hotspot-door.door-red:hover,
+    .hotspot-door.door-red:focus-visible {
+      background: radial-gradient(ellipse at center, rgba(255, 120, 60, 0.22) 0%, transparent 76%);
+      box-shadow: 0 0 32px rgba(255, 135, 65, 0.45), inset 0 0 24px rgba(255, 185, 95, 0.28);
+    }
+
+    .door-lock-icon {
+      position: absolute;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: clamp(24px, 3vw, 42px);
+      height: clamp(24px, 3vw, 42px);
+      color: #ffe08a;
+      filter: drop-shadow(0 0 8px rgba(255, 190, 65, 0.9));
+      pointer-events: none;
+      opacity: 0.96;
+    }
+
+    .number-entry {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .number-entry input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(243, 200, 107, 0.55);
+      border-radius: 6px;
+      background: #080d19;
+      color: #fff;
+      font: 600 1.1rem system-ui, sans-serif;
+      text-align: center;
+      outline: none;
+    }
+
+    .number-entry input:focus {
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 3px rgba(243, 200, 107, 0.14);
+    }
+
+    .entry-feedback {
+      min-height: 1.3em;
+      color: #ffb4a8;
+      font: 0.85rem system-ui, sans-serif;
+    }
+
+    .hotspot-hint {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translate(-50%, 6px);
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(10, 13, 22, 0.78);
+      border: 1px solid rgba(243, 200, 107, 0.45);
+      color: #f7e7c4;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+    }
+
+    .hotspot:hover .hotspot-hint,
+    .hotspot:focus-visible .hotspot-hint {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* Passage Tunnel Darkening & Vignette */
+    .passage-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(
+        circle at 56.5% 63%,
+        rgba(4, 6, 12, 0.2) 0%,
+        rgba(3, 4, 9, 0.88) 42%,
+        rgba(2, 3, 7, 1) 75%
+      );
+      will-change: opacity;
+    }
+
+    .ambient-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 58%, rgba(4, 6, 12, 0.55) 100%);
+    }
+
+    /* Discreet Corner Sound Control */
+    .hud-controls {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 30;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid rgba(243, 200, 107, 0.35);
+      background: rgba(10, 13, 22, 0.65);
+      color: var(--gold-accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(24, 30, 48, 0.85);
+      border-color: var(--gold-accent);
+      transform: scale(1.06);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Hallway Door Activity Modal */
+    .room-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(5, 7, 14, 0.76);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeInModal 0.3s ease forwards;
+    }
+
+    .room-modal-card {
+      max-width: 440px;
+      width: 100%;
+      background: linear-gradient(160deg, #131829 0%, #0b0e18 100%);
+      border: 1px solid rgba(243, 200, 107, 0.45);
+      border-radius: 12px;
+      padding: 28px 26px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .room-modal-card.theme-alchemist {
+      border-color: rgba(72, 245, 130, 0.55);
+      box-shadow: 0 0 36px rgba(72, 245, 130, 0.18), 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .room-modal-card.theme-library {
+      border-color: rgba(75, 165, 255, 0.55);
+      box-shadow: 0 0 36px rgba(75, 165, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .room-modal-card.theme-armory {
+      border-color: rgba(255, 125, 65, 0.55);
+      box-shadow: 0 0 36px rgba(255, 125, 65, 0.2), 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-accent);
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 1.45rem;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .modal-description {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #cfd6e6;
+      margin-bottom: 22px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .modal-btn.primary {
+      background: var(--gold-accent);
+      color: #0b0e18;
+      border: 1px solid var(--gold-accent);
+      font-weight: 700;
+    }
+
+    .modal-btn.primary:hover {
+      background: #ffe094;
+      transform: translateY(-1px);
+    }
+
+    .modal-btn.secondary {
+      background: transparent;
+      color: var(--text-light);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .modal-btn.secondary:hover {
+      border-color: var(--text-light);
+    }
+
+    @keyframes fadeInModal {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen" aria-live="polite">
+    <div class="loading-crest"></div>
+    <p class="loading-text">Entering the Realm...</p>
+    <div class="loading-bar-track">
+      <div id="loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
+  <main id="viewport" class="viewport" aria-label="Interactive Castle Exploration">
+    <!-- Three.js WebGL 2.5D Canvas Container -->
+    <div id="webgl-container" class="webgl-container" aria-hidden="true"></div>
+
+    <!-- CSS 3D 2.5D Engine (Synchronized Overlay & Automatic Non-WebGL Fallback) -->
+    <div id="css-stage" class="css-stage">
+      <!-- Scene 1: Gate 1 -->
+      <section id="scene-gate1" class="scene-layer active" data-scene="gate1">
+        <div class="image-plane" id="plane-gate1">
+          <img
+            src="https://talented-nation.github.io/behaviour/gate1.jpeg"
+            alt="Outer Castle Gate"
+            crossorigin="anonymous"
+            draggable="false"
+          />
+          <div class="atmosphere-layer">
+            <span class="torch-glow" style="left: 43.8%; top: 71.5%;"></span>
+            <span class="torch-glow" style="left: 69.2%; top: 71.5%;"></span>
+            <span class="window-pulse" style="left: 42.3%; top: 37.5%;"></span>
+            <span class="window-pulse" style="left: 70.6%; top: 37.5%;"></span>
+          </div>
+          <button
+            type="button"
+            id="hotspot-gate1"
+            class="hotspot hotspot-arch"
+            style="left: 48.2%; top: 44.5%; width: 16.5%; height: 39.5%;"
+            aria-label="Approach the Castle Gate"
+          >
+            <span class="hotspot-hint">Enter Castle</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Scene 2: Gate 2 (Single-Play Video Passage) -->
+      <section id="scene-gate2" class="scene-layer" data-scene="gate2">
+        <div class="image-plane" id="plane-gate2">
+          <video
+            id="video-gate2"
+            src="https://talented-nation.github.io/behaviour/fun/videogate.mp4"
+            aria-label="Open Inner Castle Gate Video"
+            crossorigin="anonymous"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </section>
+
+      <!-- Scene 3: Hallway -->
+      <section id="scene-hallway" class="scene-layer" data-scene="hallway">
+        <div class="image-plane" id="plane-hallway">
+          <img
+            src="https://talented-nation.github.io/behaviour/hallway.jpeg"
+            alt="The Mystic Castle Hub Hallway"
+            crossorigin="anonymous"
+            draggable="false"
+          />
+          <div class="atmosphere-layer">
+            <span class="torch-glow warm" style="left: 5.2%; top: 46.5%;"></span>
+            <span class="torch-glow warm" style="left: 38.2%; top: 46.5%;"></span>
+            <span class="torch-glow warm" style="left: 61.8%; top: 46.5%;"></span>
+            <span class="torch-glow warm" style="left: 94.6%; top: 46.5%;"></span>
+            <span class="magic-aura aura-green" style="left: 18.2%; top: 53.0%;"></span>
+            <span class="magic-aura aura-blue" style="left: 50.0%; top: 53.0%;"></span>
+            <span class="magic-aura aura-red" style="left: 81.8%; top: 53.0%;"></span>
+          </div>
+
+          <!-- Left Door: The Alchemist's Study -->
+          <button
+            type="button"
+            class="hotspot hotspot-door door-green"
+            data-room="alchemist"
+            data-title="The Alchemist's Study"
+            data-subtitle="Science & Mystery"
+            data-description="Bubbling elixirs, arcane brass mechanisms, and transmutation formulas await inside."
+            style="left: 9.2%; top: 26.5%; width: 18.2%; height: 48.5%;"
+            aria-label="Enter The Alchemist's Study (locked)"
+          >
+            <svg class="door-lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 1 1 8 0v3"></path><circle cx="12" cy="15.5" r="1"></circle></svg>
+            <span class="hotspot-hint">The Alchemist's Study · Locked</span>
+          </button>
+
+          <!-- Center Door: The Wizard's Library -->
+          <button
+            type="button"
+            class="hotspot hotspot-door door-blue"
+            data-room="library"
+            data-title="The Wizard's Library"
+            data-subtitle="Magic & History"
+            data-description="Ancient star-charts, bound spellbooks, and celestial runes illuminate the grand archive."
+            style="left: 40.5%; top: 28.5%; width: 19.0%; height: 46.5%;"
+            aria-label="Enter The Wizard's Library"
+          >
+            <span class="hotspot-hint">The Wizard's Library</span>
+          </button>
+
+          <!-- Right Door: The Armory of Legends -->
+          <button
+            type="button"
+            class="hotspot hotspot-door door-red"
+            data-room="armory"
+            data-title="The Armory of Legends"
+            data-subtitle="Riddles & Strength"
+            data-description="Forged shields, enchanted broadswords, and trials of valor guard the inner vault."
+            style="left: 72.5%; top: 26.5%; width: 18.4%; height: 48.5%;"
+            aria-label="Enter The Armory of Legends (locked)"
+          >
+            <svg class="door-lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 1 1 8 0v3"></path><circle cx="12" cy="15.5" r="1"></circle></svg>
+            <span class="hotspot-hint">The Armory of Legends · Locked</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Passage Shadow & Vignette Overlay -->
+    <div id="passage-overlay" class="passage-overlay" aria-hidden="true"></div>
+    <div class="ambient-vignette" aria-hidden="true"></div>
+
+    <!-- Discreet Corner Sound Control -->
+    <div class="hud-controls">
+      <button
+        type="button"
+        id="audio-toggle"
+        class="icon-btn"
+        aria-pressed="false"
+        aria-label="Toggle Ambient Sound"
+        title="Toggle Ambient Sound"
+      >
+        <svg id="icon-sound-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <svg id="icon-sound-on" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Room Activity Placeholder Modal -->
+    <div id="room-modal" class="room-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="room-modal-card" id="room-modal-card">
+        <p id="modal-subtitle" class="modal-subtitle"></p>
+        <h2 id="modal-title" class="modal-title"></h2>
+        <p id="modal-description" class="modal-description"></p>
+        <div id="number-entry" class="number-entry hidden">
+          <label for="unlock-number">Enter the number to unlock this door</label>
+          <input id="unlock-number" type="number" inputmode="numeric" autocomplete="off" />
+          <p id="entry-feedback" class="entry-feedback" aria-live="polite"></p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="modal-launch-btn" class="modal-btn primary">Begin Challenge</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Three.js CDN with automatic CSS 3D fallback if WebGL/Three.js is unavailable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+  <script>
+    /**
+     * Hybrid 2.5D Camera & Depth Renderer (Supports Image + Video Planes)
+     */
+    class Castle25DEngine {
+      constructor(options) {
+        this.webglContainer = options.webglContainer;
+        this.mediaSources = options.mediaSources;
+        this.useWebGL = false;
+
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.planes = {};
+        this.textures = {};
+        this.videoElement = options.videoElement || null;
+
+        this.pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+        this.baseCameraZ = 5;
+        this.imageAspect = 16 / 9;
+
+        this._bindPointer();
+      }
+
+      async init(onProgress) {
+        const keys = Object.keys(this.mediaSources);
+        let loadedCount = 0;
+        const totalItems = keys.length;
+
+        const bumpProgress = () => {
+          loadedCount += 1;
+          if (onProgress) onProgress(loadedCount / totalItems);
+        };
+
+        const loadedMedia = {};
+        await Promise.all(
+          keys.map(
+            (key) =>
+              new Promise((resolve, reject) => {
+                const entry = this.mediaSources[key];
+                if (entry.type === "video") {
+                  const vid = this.videoElement || document.createElement("video");
+                  vid.crossOrigin = "anonymous";
+                  vid.muted = true;
+                  vid.loop = false;
+                  vid.playsInline = true;
+                  vid.preload = "auto";
+
+                  const onReady = () => {
+                    if (vid.videoWidth && vid.videoHeight) {
+                      this.imageAspect = vid.videoWidth / vid.videoHeight;
+                    }
+                    loadedMedia[key] = { type: "video", element: vid };
+                    bumpProgress();
+                    resolve();
+                  };
+
+                  if (vid.readyState >= 2) {
+                    onReady();
+                  } else {
+                    vid.addEventListener("loadeddata", onReady, { once: true });
+                    vid.addEventListener("error", () => reject(new Error(`Failed to load video ${entry.url}`)), {
+                      once: true
+                    });
+                    if (!vid.src) vid.src = entry.url;
+                    vid.load();
+                  }
+                } else {
+                  const img = new Image();
+                  img.crossOrigin = "anonymous";
+                  img.onload = () => {
+                    loadedMedia[key] = { type: "image", element: img };
+                    if (key === "gate1" && img.naturalWidth && img.naturalHeight) {
+                      this.imageAspect = img.naturalWidth / img.naturalHeight;
+                    }
+                    bumpProgress();
+                    resolve();
+                  };
+                  img.onerror = () => reject(new Error(`Failed to load ${entry.url}`));
+                  img.src = entry.url;
+                }
+              })
+          )
+        );
+
+        if (typeof window.THREE !== "undefined" && this._detectWebGL()) {
+          try {
+            this._setupThree(loadedMedia);
+            this.useWebGL = true;
+          } catch (err) {
+            console.warn("WebGL initialization fell back to CSS 3D mode:", err);
+            this.useWebGL = false;
+          }
+        }
+
+        this.resize();
+        window.addEventListener("resize", () => this.resize());
+      }
+
+      _detectWebGL() {
+        try {
+          const canvas = document.createElement("canvas");
+          return !!(
+            window.WebGLRenderingContext &&
+            (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+          );
+        } catch (e) {
+          return false;
+        }
+      }
+
+      _setupThree(loadedMedia) {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x07090f);
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        this.camera.position.set(0, 0, this.baseCameraZ);
+
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.webglContainer.appendChild(this.renderer.domElement);
+
+        Object.keys(loadedMedia).forEach((key) => {
+          const item = loadedMedia[key];
+          const texture =
+            item.type === "video"
+              ? new THREE.VideoTexture(item.element)
+              : new THREE.Texture(item.element);
+
+          texture.needsUpdate = true;
+          texture.encoding = THREE.sRGBEncoding;
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            opacity: key === "gate1" ? 1 : 0,
+            depthWrite: false
+          });
+
+          const geometry = new THREE.PlaneGeometry(1, 1);
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.visible = key === "gate1";
+          this.scene.add(mesh);
+
+          this.textures[key] = texture;
+          this.planes[key] = mesh;
+        });
+      }
+
+      resize() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const viewportAspect = vw / vh;
+
+        let planeWidth, planeHeight;
+        if (viewportAspect > this.imageAspect) {
+          planeWidth = vw;
+          planeHeight = vw / this.imageAspect;
+        } else {
+          planeHeight = vh;
+          planeWidth = vh * this.imageAspect;
+        }
+
+        document.querySelectorAll(".image-plane").forEach((el) => {
+          el.style.width = `${planeWidth}px`;
+          el.style.height = `${planeHeight}px`;
+        });
+
+        if (this.useWebGL && this.renderer && this.camera) {
+          this.camera.aspect = viewportAspect;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(vw, vh);
+
+          const vFov = (this.camera.fov * Math.PI) / 180;
+          const frustumHeight = 2 * Math.tan(vFov / 2) * this.baseCameraZ;
+          const frustumWidth = frustumHeight * viewportAspect;
+
+          let meshW, meshH;
+          if (viewportAspect > this.imageAspect) {
+            meshW = frustumWidth;
+            meshH = frustumWidth / this.imageAspect;
+          } else {
+            meshH = frustumHeight;
+            meshW = frustumHeight * this.imageAspect;
+          }
+
+          Object.values(this.planes).forEach((mesh) => {
+            mesh.scale.set(meshW, meshH, 1);
+          });
+        }
+      }
+
+      _bindPointer() {
+        window.addEventListener("pointermove", (e) => {
+          const nx = (e.clientX / window.innerWidth) * 2 - 1;
+          const ny = (e.clientY / window.innerHeight) * 2 - 1;
+          this.pointer.targetX = nx;
+          this.pointer.targetY = ny;
+        });
+      }
+
+      playGate2VideoFromStart() {
+        if (!this.videoElement) return;
+        this.videoElement.currentTime = 0;
+        const playPromise = this.videoElement.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {});
+        }
+      }
+
+      pauseGate2Video() {
+        if (!this.videoElement) return;
+        this.videoElement.pause();
+      }
+
+      updateIdle(isTransitioning, activeScene) {
+        const disableParallax = isTransitioning || activeScene === "gate2";
+        const factor = disableParallax ? 0.04 : 0.06;
+        const targetX = disableParallax ? 0 : this.pointer.targetX;
+        const targetY = disableParallax ? 0 : this.pointer.targetY;
+
+        this.pointer.x += (targetX - this.pointer.x) * factor;
+        this.pointer.y += (targetY - this.pointer.y) * factor;
+
+        if (!isTransitioning) {
+          const offsetX = activeScene === "gate2" ? 0 : -this.pointer.x * 6;
+          const offsetY = activeScene === "gate2" ? 0 : -this.pointer.y * 4;
+          const scale = activeScene === "gate2" ? 1.0 : 1.015;
+          const activePlane = document.querySelector(".scene-layer.active .image-plane");
+          if (activePlane) {
+            activePlane.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0px) scale(${scale})`;
+          }
+
+          if (this.useWebGL && this.camera) {
+            this.camera.position.x = activeScene === "gate2" ? 0 : this.pointer.x * 0.04;
+            this.camera.position.y = activeScene === "gate2" ? 0 : -this.pointer.y * 0.03;
+          }
+        }
+
+        if (this.useWebGL && this.renderer && this.scene && this.camera) {
+          this.renderer.render(this.scene, this.camera);
+        }
+      }
+
+      setPlaneTransform(key, { scale = 1, translateX = 0, translateY = 0, opacity = 1, visible = true }) {
+        const cssScene = document.getElementById(`scene-${key}`);
+        const cssPlane = document.getElementById(`plane-${key}`);
+
+        if (cssScene && cssPlane) {
+          cssScene.style.opacity = opacity;
+          cssScene.style.visibility = visible ? "visible" : "hidden";
+          cssPlane.style.transform = `translate3d(${translateX}%, ${translateY}%, 0px) scale(${scale})`;
+        }
+
+        if (this.useWebGL && this.planes[key]) {
+          const mesh = this.planes[key];
+          mesh.visible = visible;
+          mesh.material.opacity = opacity;
+          const zDepth = this.baseCameraZ * (1 - 1 / Math.max(scale, 0.01));
+          mesh.position.set(
+            (translateX / 100) * mesh.scale.x,
+            (-translateY / 100) * mesh.scale.y,
+            zDepth
+          );
+        }
+      }
+    }
+
+    /**
+     * Main Controller — Sequence:
+     * GATE 1 (click) -> GATE 2 video plays once -> automatically reveals HALLWAY
+     */
+    (function () {
+      "use strict";
+
+      const MEDIA_ASSETS = {
+        gate1: { type: "image", url: "https://talented-nation.github.io/behaviour/gate1.jpeg" },
+        gate2: { type: "video", url: "https://talented-nation.github.io/behaviour/fun/videogate.mp4" },
+        hallway: { type: "image", url: "https://talented-nation.github.io/behaviour/hallway.jpeg" }
+      };
+
+      const GATE_FOCAL_POINT = {
+        offsetX: -6.5,
+        offsetY: -13.0
+      };
+
+      const state = {
+        currentScene: "gate1",
+        isTransitioning: false,
+        autoHallwayStarted: false,
+        audioEnabled: false
+      };
+
+      const loadingScreen = document.getElementById("loading-screen");
+      const loadingBarFill = document.getElementById("loading-bar-fill");
+      const passageOverlay = document.getElementById("passage-overlay");
+      const audioToggle = document.getElementById("audio-toggle");
+      const iconSoundOff = document.getElementById("icon-sound-off");
+      const iconSoundOn = document.getElementById("icon-sound-on");
+      const videoGate2 = document.getElementById("video-gate2");
+
+      const hotspotGate1 = document.getElementById("hotspot-gate1");
+      const hallwayDoors = document.querySelectorAll(".hotspot-door");
+
+      const roomModal = document.getElementById("room-modal");
+      const roomModalCard = document.getElementById("room-modal-card");
+      const modalSubtitle = document.getElementById("modal-subtitle");
+      const modalTitle = document.getElementById("modal-title");
+      const modalDescription = document.getElementById("modal-description");
+      const modalLaunchBtn = document.getElementById("modal-launch-btn");
+      const numberEntry = document.getElementById("number-entry");
+      const unlockNumber = document.getElementById("unlock-number");
+      const entryFeedback = document.getElementById("entry-feedback");
+      const LOCK_CODES = { alchemist: "10", armory: "13" };
+      let activeDoor = null;
+
+      class AmbientSoundscape {
+        constructor() {
+          this.ctx = null;
+          this.masterGain = null;
+          this.isPlaying = false;
+        }
+
+        toggle() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return false;
+            this.ctx = new AudioCtx();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = 0.14;
+            this.masterGain.connect(this.ctx.destination);
+            this._startAmbientPad();
+          }
+
+          if (this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+
+          this.isPlaying = !this.isPlaying;
+          this.masterGain.gain.setTargetAtTime(this.isPlaying ? 0.14 : 0.0, this.ctx.currentTime, 0.25);
+          return this.isPlaying;
+        }
+
+        _startAmbientPad() {
+          const freqs = [110, 164.81, 220];
+          freqs.forEach((f) => {
+            const osc = this.ctx.createOscillator();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.value = f;
+            filter.type = "lowpass";
+            filter.frequency.value = 320;
+            gain.gain.value = 0.08;
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start();
+          });
+        }
+
+        playTransitionWhoosh() {
+          if (!this.isPlaying || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.exponentialRampToValueAtTime(42, now + 1.4);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.18, now + 0.4);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+
+          osc.connect(gain);
+          gain.connect(this.masterGain);
+          osc.start(now);
+          osc.stop(now + 1.65);
+        }
+
+        playPortalChime() {
+          if (!this.isPlaying || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          [440, 554.37, 659.25].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.001, now + idx * 0.07);
+            gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.07 + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.7);
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.75);
+          });
+        }
+      }
+
+      const soundscape = new AmbientSoundscape();
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function easeInQuad(t) {
+        return t * t;
+      }
+
+      function lerp(start, end, t) {
+        return start + (end - start) * t;
+      }
+
+      const engine = new Castle25DEngine({
+        webglContainer: document.getElementById("webgl-container"),
+        mediaSources: MEDIA_ASSETS,
+        videoElement: videoGate2
+      });
+
+      function setActiveSceneDOM(targetKey) {
+        document.querySelectorAll(".scene-layer").forEach((layer) => {
+          const isTarget = layer.dataset.scene === targetKey;
+          layer.classList.toggle("active", isTarget);
+          layer.classList.remove("transitioning");
+          layer.style.opacity = isTarget ? "1" : "0";
+          layer.style.visibility = isTarget ? "visible" : "hidden";
+        });
+      }
+
+      /**
+       * Transition 1: Gate 1 -> Gate 2 Video
+       */
+      function transitionGate1ToGate2() {
+        if (state.isTransitioning || state.currentScene !== "gate1") return;
+        state.isTransitioning = true;
+        state.autoHallwayStarted = false;
+        soundscape.playTransitionWhoosh();
+        engine.playGate2VideoFromStart();
+
+        const scene1El = document.getElementById("scene-gate1");
+        const scene2El = document.getElementById("scene-gate2");
+        scene1El.classList.add("transitioning");
+        scene2El.classList.add("transitioning");
+
+        const duration = 1800;
+        const startTime = performance.now();
+
+        function step(now) {
+          const rawT = Math.min((now - startTime) / duration, 1);
+
+          if (rawT < 0.55) {
+            const localT = rawT / 0.55;
+            const moveT = easeInQuad(localT);
+            const scale = lerp(1.015, 1.85, moveT);
+            const tx = lerp(0, GATE_FOCAL_POINT.offsetX * 0.75, moveT);
+            const ty = lerp(0, GATE_FOCAL_POINT.offsetY * 0.75, moveT);
+
+            engine.setPlaneTransform("gate1", {
+              scale,
+              translateX: tx,
+              translateY: ty,
+              opacity: 1,
+              visible: true
+            });
+            engine.setPlaneTransform("gate2", {
+              scale: 1.24,
+              translateX: GATE_FOCAL_POINT.offsetX * 0.25,
+              translateY: GATE_FOCAL_POINT.offsetY * 0.25,
+              opacity: 0,
+              visible: false
+            });
+
+            const shadowAlpha = Math.max(0, (localT - 0.55) / 0.45) * 0.45;
+            passageOverlay.style.opacity = shadowAlpha.toFixed(3);
+          } else {
+            const localT = (rawT - 0.55) / 0.45;
+            const settleT = easeOutQuart(localT);
+
+            const g1Scale = lerp(1.85, 2.35, settleT);
+            const g1Opacity = Math.max(0, 1 - settleT * 1.45);
+            engine.setPlaneTransform("gate1", {
+              scale: g1Scale,
+              translateX: GATE_FOCAL_POINT.offsetX * 0.9,
+              translateY: GATE_FOCAL_POINT.offsetY * 0.9,
+              opacity: g1Opacity,
+              visible: g1Opacity > 0.01
+            });
+
+            const g2Scale = lerp(1.24, 1.0, settleT);
+            const g2Tx = lerp(GATE_FOCAL_POINT.offsetX * 0.25, 0, settleT);
+            const g2Ty = lerp(GATE_FOCAL_POINT.offsetY * 0.25, 0, settleT);
+            const g2Opacity = Math.min(1, settleT * 1.35);
+
+            engine.setPlaneTransform("gate2", {
+              scale: g2Scale,
+              translateX: g2Tx,
+              translateY: g2Ty,
+              opacity: g2Opacity,
+              visible: true
+            });
+
+            const shadowAlpha = (1 - settleT) * 0.45;
+            passageOverlay.style.opacity = shadowAlpha.toFixed(3);
+          }
+
+          if (rawT < 1) {
+            requestAnimationFrame(step);
+          } else {
+            engine.setPlaneTransform("gate1", { scale: 1, translateX: 0, translateY: 0, opacity: 0, visible: false });
+            engine.setPlaneTransform("gate2", { scale: 1, translateX: 0, translateY: 0, opacity: 1, visible: true });
+            passageOverlay.style.opacity = "0";
+            setActiveSceneDOM("gate2");
+            state.currentScene = "gate2";
+            state.isTransitioning = false;
+
+            // In case the short video already ended right as transition 1 finished
+            if (videoGate2.ended) {
+              transitionGate2ToHallway();
+            }
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      /**
+       * Transition 2: Automatic seamless emergence into Hallway as videogate.mp4 completes
+       */
+      function transitionGate2ToHallway() {
+        if (state.autoHallwayStarted || state.currentScene === "hallway") return;
+        state.autoHallwayStarted = true;
+        state.isTransitioning = true;
+        soundscape.playTransitionWhoosh();
+
+        const scene2El = document.getElementById("scene-gate2");
+        const scene3El = document.getElementById("scene-hallway");
+        scene2El.classList.add("transitioning");
+        scene3El.classList.add("transitioning");
+
+        const duration = 1500;
+        const startTime = performance.now();
+
+        function step(now) {
+          const rawT = Math.min((now - startTime) / duration, 1);
+          const decelT = easeOutQuart(rawT);
+
+          // Video continues forward into the passage and fades out smoothly
+          const g2Scale = lerp(1.0, 1.35, easeInQuad(rawT));
+          const g2Opacity = Math.max(0, 1 - rawT * 1.35);
+          engine.setPlaneTransform("gate2", {
+            scale: g2Scale,
+            translateX: 0,
+            translateY: 0,
+            opacity: g2Opacity,
+            visible: g2Opacity > 0.01
+          });
+
+          // Hallway emerges forward and settles cleanly at exact 1.0 framing
+          const hwScale = lerp(1.22, 1.0, decelT);
+          const hwOpacity = Math.min(1, rawT * 1.45);
+          engine.setPlaneTransform("hallway", {
+            scale: hwScale,
+            translateX: 0,
+            translateY: 0,
+            opacity: hwOpacity,
+            visible: true
+          });
+
+          // Brief subtle archway shadow pulse mid-crossover
+          const archShadow = Math.sin(rawT * Math.PI) * 0.35;
+          passageOverlay.style.opacity = archShadow.toFixed(3);
+
+          if (rawT < 1) {
+            requestAnimationFrame(step);
+          } else {
+            engine.pauseGate2Video();
+            engine.setPlaneTransform("gate2", { scale: 1, translateX: 0, translateY: 0, opacity: 0, visible: false });
+            engine.setPlaneTransform("hallway", { scale: 1, translateX: 0, translateY: 0, opacity: 1, visible: true });
+            passageOverlay.style.opacity = "0";
+            setActiveSceneDOM("hallway");
+            state.currentScene = "hallway";
+            state.isTransitioning = false;
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // Trigger seamless transition slightly before final frame & on video ended so there is zero freeze
+      videoGate2.addEventListener("timeupdate", () => {
+        if (
+          state.currentScene === "gate2" &&
+          !state.isTransitioning &&
+          !state.autoHallwayStarted &&
+          videoGate2.duration &&
+          videoGate2.currentTime >= videoGate2.duration - 0.65
+        ) {
+          transitionGate2ToHallway();
+        }
+      });
+
+      videoGate2.addEventListener("ended", () => {
+        if (state.currentScene === "gate2" && !state.isTransitioning && !state.autoHallwayStarted) {
+          transitionGate2ToHallway();
+        }
+      });
+
+      function openRoomModal(doorBtn) {
+        if (state.isTransitioning || state.currentScene !== "hallway") return;
+        soundscape.playPortalChime();
+
+        const roomKey = doorBtn.dataset.room;
+        activeDoor = doorBtn;
+        const isLocked = Object.prototype.hasOwnProperty.call(LOCK_CODES, roomKey);
+        numberEntry.classList.toggle("hidden", !isLocked);
+        unlockNumber.value = "";
+        entryFeedback.textContent = "";
+        modalLaunchBtn.textContent = isLocked ? "Unlock & Enter" : "Enter Library";
+        modalSubtitle.textContent = doorBtn.dataset.subtitle || "";
+        modalTitle.textContent = doorBtn.dataset.title || "";
+        modalDescription.textContent = doorBtn.dataset.description || "";
+
+        roomModalCard.className = `room-modal-card theme-${roomKey}`;
+        modalLaunchBtn.dataset.targetRoom = roomKey;
+        roomModal.classList.remove("hidden");
+      }
+
+      function closeRoomModal() {
+        roomModal.classList.add("hidden");
+        activeDoor = null;
+      }
+
+      hotspotGate1.addEventListener("click", transitionGate1ToGate2);
+
+      hallwayDoors.forEach((door) => {
+        door.addEventListener("click", () => openRoomModal(door));
+      });
+
+      roomModal.addEventListener("click", (e) => {
+        if (e.target === roomModal) closeRoomModal();
+      });
+
+      modalLaunchBtn.addEventListener("click", () => {
+        const room = modalLaunchBtn.dataset.targetRoom;
+
+        if (room === "library") {
+          window.location.href = "https://talented-nation.github.io/behaviour/fun/armor.html";
+          return;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(LOCK_CODES, room)) {
+          if (unlockNumber.value.trim() !== LOCK_CODES[room]) {
+            entryFeedback.textContent = "Incorrect number. Try again.";
+            unlockNumber.focus();
+            return;
+          }
+          if (activeDoor) {
+            activeDoor.classList.add("unlocked");
+            activeDoor.setAttribute("aria-label", `Enter ${activeDoor.dataset.title}`);
+            const lockIcon = activeDoor.querySelector(".door-lock-icon");
+            if (lockIcon) lockIcon.remove();
+            const hint = activeDoor.querySelector(".hotspot-hint");
+            if (hint) hint.textContent = activeDoor.dataset.title;
+          }
+        }
+
+        window.dispatchEvent(
+          new CustomEvent("castle:enterRoom", {
+            detail: { room }
+          })
+        );
+        closeRoomModal();
+      });
+
+      unlockNumber.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") modalLaunchBtn.click();
+      });
+
+      audioToggle.addEventListener("click", () => {
+        const active = soundscape.toggle();
+        state.audioEnabled = active;
+        audioToggle.setAttribute("aria-pressed", String(active));
+        iconSoundOff.classList.toggle("hidden", active);
+        iconSoundOn.classList.toggle("hidden", !active);
+      });
+
+      function renderLoop() {
+        engine.updateIdle(state.isTransitioning, state.currentScene);
+        requestAnimationFrame(renderLoop);
+      }
+
+      engine
+        .init((progress) => {
+          loadingBarFill.style.width = `${Math.round(progress * 100)}%`;
+        })
+        .then(() => {
+          setActiveSceneDOM("gate1");
+          engine.setPlaneTransform("gate1", { scale: 1.015, translateX: 0, translateY: 0, opacity: 1, visible: true });
+          requestAnimationFrame(renderLoop);
+          setTimeout(() => {
+            loadingScreen.classList.add("fade-out");
+          }, 300);
+        })
+        .catch((err) => {
+          console.error(err);
+          document.querySelector(".loading-text").textContent = "Unable to load remote castle media";
+        });
+    })();
+  </script>
+</body>
+</html>
