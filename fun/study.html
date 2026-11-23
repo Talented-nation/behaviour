@@ -185,10 +185,27 @@ const questions = [
 
 let currentQ = null;
 let isEnteringRoom = false;
+let keyRewardSent = false;
 const solved = new Set();
 const correctSound = document.getElementById('correctSound');
 const hooraySound = document.getElementById('hooraySound');
 const doorSound = document.getElementById('doorSound');
+
+function notifyKeyRewardEarned() {
+  if (keyRewardSent) return;
+  keyRewardSent = true;
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'KEY_REWARD',
+        game: 3,
+        score: solved.size
+      }, '*');
+    }
+  } catch (err) {
+    console.warn('Failed to post KEY_REWARD message to parent:', err);
+  }
+}
 
 // 10-Minute Timer Logic
 let timeLeft = 10 * 60; // 600 seconds
@@ -246,6 +263,7 @@ function checkAnswer(){
     setTimeout(closeModal, 1400);
     if (solved.size === 10) {
       clearInterval(timerInterval);
+      notifyKeyRewardEarned();
       setTimeout(() => {
         document.getElementById('winMessage').classList.add('active');
         hooraySound.currentTime = 0;
@@ -260,6 +278,7 @@ function checkAnswer(){
 function enterNextRoom() {
   if (isEnteringRoom) return;
   isEnteringRoom = true;
+  notifyKeyRewardEarned();
 
   const btn = document.getElementById('enterRoomBtn');
   if (btn) btn.disabled = true;
