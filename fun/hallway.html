@@ -1376,6 +1376,11 @@
             const hint = activeDoor.querySelector(".hotspot-hint");
             if (hint) hint.textContent = activeDoor.dataset.title;
           }
+
+          if (room === "alchemist") {
+            window.location.href = "https://talented-nation.github.io/behaviour/sci/science.html";
+            return;
+          }
         }
 
         window.dispatchEvent(
@@ -1423,3 +1428,4 @@
   </script>
 </body>
 </html>
+```[cite: 1]
